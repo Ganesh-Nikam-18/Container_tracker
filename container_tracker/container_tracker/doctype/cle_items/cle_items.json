@@ -1,0 +1,73 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-08-25 15:32:55.639660",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "container_ledger_entry",
+  "datetime",
+  "container",
+  "filled_qty",
+  "asset_movement"
+ ],
+ "fields": [
+  {
+   "fieldname": "container_ledger_entry",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Ledger entry",
+   "options": "Container Ledger Entry",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "container_ledger_entry.datetime",
+   "fieldname": "datetime",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Datetime",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "container_ledger_entry.container",
+   "fieldname": "container",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Container",
+   "options": "Containers"
+  },
+  {
+   "fetch_from": "container_ledger_entry.filled_qty",
+   "fieldname": "filled_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Filled Qty"
+  },
+  {
+   "fetch_from": "container_ledger_entry.asset_movement",
+   "fieldname": "asset_movement",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Asset Movement",
+   "options": "Asset Movement",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-25 15:37:29.530578",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "CLE Items",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

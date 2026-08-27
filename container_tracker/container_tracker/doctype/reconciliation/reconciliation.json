@@ -1,0 +1,141 @@
+{
+ "actions": [],
+ "autoname": "CRC-.YYYY-.#####",
+ "creation": "2026-08-26 16:20:13.352893",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_izmj",
+  "posting_date",
+  "customer",
+  "transporter",
+  "containers_received",
+  "column_break_xrip",
+  "damage_and_loss_charges",
+  "heel_shortfall_penalty",
+  "total_recovery",
+  "amended_from",
+  "column_break_ljhf",
+  "chargebacks_raised",
+  "section_break_dvcy",
+  "containers"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_izmj",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Reconciliation",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "transporter",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Transporter",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "column_break_xrip",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "containers_received",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Containers Received"
+  },
+  {
+   "fieldname": "damage_and_loss_charges",
+   "fieldtype": "Currency",
+   "label": "Damage / loss charges"
+  },
+  {
+   "fieldname": "heel_shortfall_penalty",
+   "fieldtype": "Currency",
+   "label": "Heel Shortfall Penalty"
+  },
+  {
+   "fieldname": "total_recovery",
+   "fieldtype": "Currency",
+   "label": "Total Recovery"
+  },
+  {
+   "fieldname": "column_break_ljhf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "chargebacks_raised",
+   "fieldtype": "Table",
+   "label": "Chargebacks Raised",
+   "options": "CRC Items"
+  },
+  {
+   "fieldname": "section_break_dvcy",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "containers",
+   "fieldtype": "Table",
+   "label": "Containers",
+   "options": "Reconciliation Items"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-08-26 16:58:29.131566",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "Reconciliation",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

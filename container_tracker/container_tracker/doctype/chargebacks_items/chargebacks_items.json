@@ -1,0 +1,76 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-08-26 15:40:25.031945",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "containers_details_section",
+  "container",
+  "type",
+  "status",
+  "condition_on_return",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "containers_details_section",
+   "fieldtype": "Section Break",
+   "label": "Containers Details"
+  },
+  {
+   "fieldname": "container",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Container",
+   "options": "Containers",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "container.type",
+   "fieldname": "type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Type",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "container.status",
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Available\nFilled\nIn Transit\nWith Customer\nUnder Maintenance\nDamaged\nScrapped",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "condition_on_return",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Condition On Return"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Remarks"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-26 15:50:38.981982",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "Chargebacks Items",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

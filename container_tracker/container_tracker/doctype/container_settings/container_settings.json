@@ -1,0 +1,155 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-08-24 17:35:44.901911",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "minimum_retained_quantity_heel_penalty_section",
+  "penalty_rate_per_unit_short",
+  "flat_recooling_charge",
+  "auto_raise_penalty_invoice_on_reconciliation",
+  "column_break_dojy",
+  "tolerance_before_penalty",
+  "penalty_item",
+  "damage_loss_and_retention_section",
+  "damaged_container_charge",
+  "free_retention_days_at_customer",
+  "block_filling_when_hydro_test_is_overdue",
+  "column_break_ndcz",
+  "lost_container_charge",
+  "retention_charge_per_day_per_container",
+  "carrier_track_trace_section",
+  "shipping_carrier_api",
+  "column_break_yyan",
+  "tracking_poll_interval"
+ ],
+ "fields": [
+  {
+   "description": "Shipping containers must come back with a minimum quantity of gas so they stay cold. The required quantity is defined per container type and item on the container master; the money side is configured here.\n",
+   "fieldname": "minimum_retained_quantity_heel_penalty_section",
+   "fieldtype": "Section Break",
+   "label": "Minimum retained quantity (heel) penalty"
+  },
+  {
+   "description": "(\u20b9)",
+   "fieldname": "penalty_rate_per_unit_short",
+   "fieldtype": "Currency",
+   "label": "Penalty Rate Per Unit Short"
+  },
+  {
+   "description": "(\u20b9)",
+   "fieldname": "flat_recooling_charge",
+   "fieldtype": "Currency",
+   "label": "Flat Re-Cooling Charge"
+  },
+  {
+   "default": "Yes",
+   "fieldname": "auto_raise_penalty_invoice_on_reconciliation",
+   "fieldtype": "Select",
+   "label": "Auto raise Penalty Invoice On Reconciliation",
+   "options": "Yes\nNo"
+  },
+  {
+   "fieldname": "column_break_dojy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Shortfall up to this quantity is ignored\n",
+   "fieldname": "tolerance_before_penalty",
+   "fieldtype": "Float",
+   "label": "Tolerance Before Penalty"
+  },
+  {
+   "description": "Item used on the penalty Sales Invoice\n",
+   "fieldname": "penalty_item",
+   "fieldtype": "Link",
+   "label": "Penalty Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "damage_loss_and_retention_section",
+   "fieldtype": "Section Break",
+   "label": "Damage, loss and retention"
+  },
+  {
+   "description": "(% of security deposit)",
+   "fieldname": "damaged_container_charge",
+   "fieldtype": "Percent",
+   "label": "Damaged Container Charge"
+  },
+  {
+   "fieldname": "free_retention_days_at_customer",
+   "fieldtype": "Int",
+   "label": "Free Retention Days At Customer"
+  },
+  {
+   "fieldname": "block_filling_when_hydro_test_is_overdue",
+   "fieldtype": "Select",
+   "label": "Block Filling When Hydro Test Is Overdue",
+   "options": "Yes\nNo"
+  },
+  {
+   "fieldname": "column_break_ndcz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "(% of security deposit)",
+   "fieldname": "lost_container_charge",
+   "fieldtype": "Percent",
+   "label": "Lost Container Charge"
+  },
+  {
+   "description": "(\u20b9)",
+   "fieldname": "retention_charge_per_day_per_container",
+   "fieldtype": "Currency",
+   "label": "Retention Charge Per Day Per Container"
+  },
+  {
+   "fieldname": "carrier_track_trace_section",
+   "fieldtype": "Section Break",
+   "label": "Carrier Track & Trace"
+  },
+  {
+   "fieldname": "shipping_carrier_api",
+   "fieldtype": "Data",
+   "label": "Shipping Carrier API"
+  },
+  {
+   "fieldname": "column_break_yyan",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "(Hours)",
+   "fieldname": "tracking_poll_interval",
+   "fieldtype": "Int",
+   "label": "Tracking Poll Interval"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-08-24 17:51:07.240195",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "Container Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -11,15 +11,15 @@ app_license = "mit"
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "container_tracker",
-# 		"logo": "/assets/container_tracker/logo.png",
-# 		"title": "Container Tracker",
-# 		"route": "/container_tracker",
-# 		"has_permission": "container_tracker.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": "container_tracker",
+		"logo": "/assets/container_tracker/shipping-timed.png",
+		"title": "Container Tracker",
+		"route": "/desk/container-tracker",
+		# "has_permission": "container_tracker.api.permission.has_app_permission"
+	}
+]
 
 # Includes in <head>
 # ------------------
@@ -138,13 +138,11 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Asset": {
+		"on_submit": "container_tracker.overrides.asset.create_container_on_submit"
+	}
+}
 
 # Scheduled Tasks
 # ---------------

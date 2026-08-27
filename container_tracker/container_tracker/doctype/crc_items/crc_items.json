@@ -1,0 +1,55 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-08-26 16:41:37.939095",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "chargebacks",
+  "document_type",
+  "customer"
+ ],
+ "fields": [
+  {
+   "fieldname": "chargebacks",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Chargebacks",
+   "options": "Chargebacks",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "chargebacks.document_type",
+   "fieldname": "document_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Document Type",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "chargebacks.party",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-26 16:44:33.767989",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "CRC Items",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

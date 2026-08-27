@@ -1,0 +1,171 @@
+{
+ "actions": [],
+ "autoname": "CFE-.YYYY.-.#####",
+ "creation": "2026-08-25 12:21:26.851056",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_po9v",
+  "posting_date",
+  "customer",
+  "item",
+  "amended_from",
+  "column_break_ixog",
+  "delivery_note",
+  "delivery_note_date",
+  "operator",
+  "containers_filled",
+  "quantity_posted",
+  "containers_section",
+  "container_filling_items",
+  "container_ledger_entries_posted_section",
+  "cle_items"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_po9v",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Container Filling Entry",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Posting Date",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ixog",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "delivery_note",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Delivery Note",
+   "options": "Delivery Note",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "delivery_note.posting_date",
+   "fieldname": "delivery_note_date",
+   "fieldtype": "Date",
+   "label": "Delivery Note Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "operator",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Operator",
+   "read_only": 1
+  },
+  {
+   "fieldname": "containers_filled",
+   "fieldtype": "Float",
+   "label": "Containers Filled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "quantity_posted",
+   "fieldtype": "Float",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Quantity Posted",
+   "read_only": 1
+  },
+  {
+   "fieldname": "containers_section",
+   "fieldtype": "Section Break",
+   "label": "Containers"
+  },
+  {
+   "fieldname": "container_ledger_entries_posted_section",
+   "fieldtype": "Section Break",
+   "label": "Container Ledger Entries Posted"
+  },
+  {
+   "fieldname": "container_filling_items",
+   "fieldtype": "Table",
+   "label": "Container Filling Items",
+   "options": "Container Filling Items",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cle_items",
+   "fieldtype": "Table",
+   "label": "CLE Items",
+   "options": "CLE Items",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "in_create": 1,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-08-25 15:40:35.617907",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "Container Filling Entry",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
