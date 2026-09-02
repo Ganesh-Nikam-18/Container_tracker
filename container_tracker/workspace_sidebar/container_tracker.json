@@ -54,24 +54,12 @@
   {
    "child": 1,
    "collapsible": 1,
-   "icon": "logs",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Filling Entry Logs",
-   "link_to": "Container Filling Entry",
-   "link_type": "DocType",
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 1,
-   "collapsible": 1,
    "icon": "clipboard-check",
    "indent": 0,
    "keep_closed": 0,
-   "label": "Reconciliation List",
-   "link_to": "Reconciliation",
-   "link_type": "DocType",
+   "label": "Reconciliation",
+   "link_to": "new-reconciliation",
+   "link_type": "Page",
    "show_arrow": 0,
    "type": "Link"
   },
@@ -216,7 +204,7 @@
    "type": "Section Break"
   }
  ],
- "modified": "2026-08-27 17:52:59.158121",
+ "modified": "2026-09-02 12:41:04.289837",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Tracker",

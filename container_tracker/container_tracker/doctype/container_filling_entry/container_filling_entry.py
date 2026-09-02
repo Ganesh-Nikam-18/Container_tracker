@@ -14,9 +14,15 @@ class ContainerFillingEntry(Document):
 		for item in self.container_filling_items:
 			# 1. Update Container Document
 			container_doc = frappe.get_doc("Containers", item.container)
-			container_doc.db_set('status', 'Filled')
+			container_doc.db_set('status', 'With Customer')
+			container_doc.db_set('custodian', self.customer)
 			container_doc.db_set('last_filled', today())
-			container_doc.db_set('filled_qty', item.qty_filled)
+			
+			if frappe.db.has_column("Containers", "filled_qty"):
+				container_doc.db_set('filled_qty', item.qty_filled)
+				
+			if item.batch and frappe.db.has_column("Containers", "batch"):
+				container_doc.db_set('batch', item.batch)
 			
 			# 2. Create Container Ledger Entry
 			cle = frappe.get_doc({
@@ -33,7 +39,9 @@ class ContainerFillingEntry(Document):
 			
 			# 3. Add to CLE Items child table
 			self.append("cle_items", {
-				"container_ledger_entry": cle.name
+				"container_ledger_entry": cle.name,
+				"qty": item.qty_filled,
+				"filled_qty": item.qty_filled
 			})
 		
 		# Save child table updates
@@ -41,9 +49,34 @@ class ContainerFillingEntry(Document):
 		frappe.db.commit()
 
 	def create_asset_movement(self, container_doc):
-		# Placeholder for Asset Movement creation
-		# In a real implementation, you would determine source and target locations
-		return None
+		# Create Asset Movement to transfer container from Filling Plant to Finished Goods
+		# Asset Movement target_location is a Link to the Location doctype.
+		target_location = "Finished Goods"
+		
+		# Ensure the Location exists in the system before using it
+		if not frappe.db.exists("Location", target_location):
+			loc = frappe.new_doc("Location")
+			loc.location_name = target_location
+			loc.insert(ignore_permissions=True)
+		
+		# For now, let's just log a basic Asset Movement
+		am = frappe.new_doc("Asset Movement")
+		am.company = frappe.defaults.get_user_default("Company")
+		am.purpose = "Transfer"
+		am.transaction_date = now_datetime()
+		
+		am.append("assets", {
+			"asset": container_doc.asset,
+			"target_location": target_location
+		})
+		
+		try:
+			am.insert(ignore_permissions=True)
+			am.submit()
+			return am.name
+		except Exception as e:
+			frappe.log_error(message=frappe.get_traceback(), title="Asset Movement Creation Failed in CFE")
+			return None
 
 	def create_stock_entry(self):
 		# Create Stock Entry (Material Issue) to consume the bulk gas

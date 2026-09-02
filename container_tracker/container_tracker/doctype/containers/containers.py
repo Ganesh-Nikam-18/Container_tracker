@@ -6,4 +6,7 @@ from frappe.model.document import Document
 
 
 class Containers(Document):
-	pass
+	def after_insert(self):
+		# Automatically set the barcode to the Container's own ID upon creation
+		if not self.container_barcode:
+			self.db_set('container_barcode', self.name)

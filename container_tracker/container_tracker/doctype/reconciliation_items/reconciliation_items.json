@@ -19,8 +19,12 @@
  ],
  "fields": [
   {
+   "allow_on_submit": 1,
    "fieldname": "container",
    "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Container",
    "options": "Containers",
    "reqd": 1
@@ -87,7 +91,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-08-26 17:30:39.629836",
+ "modified": "2026-09-02 13:13:43.206286",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Reconciliation Items",

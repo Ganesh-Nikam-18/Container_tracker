@@ -18,6 +18,7 @@
   "quantity_posted",
   "containers_section",
   "container_filling_items",
+  "used_containers_count",
   "container_ledger_entries_posted_section",
   "cle_items"
  ],
@@ -56,7 +57,8 @@
    "in_standard_filter": 1,
    "label": "Customer",
    "options": "Customer",
-   "read_only": 1
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "item",
@@ -66,7 +68,8 @@
    "in_standard_filter": 1,
    "label": "Item",
    "options": "Item",
-   "read_only": 1
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "column_break_ixog",
@@ -80,7 +83,8 @@
    "in_standard_filter": 1,
    "label": "Delivery Note",
    "options": "Delivery Note",
-   "read_only": 1
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fetch_from": "delivery_note.posting_date",
@@ -130,10 +134,22 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "cle_items",
    "fieldtype": "Table",
    "label": "CLE Items",
+   "no_copy": 1,
    "options": "CLE Items",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "used_containers_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Used Containers (count)",
+   "no_copy": 1,
+   "non_negative": 1,
    "read_only": 1
   }
  ],
@@ -142,7 +158,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-08-25 15:40:35.617907",
+ "modified": "2026-09-02 12:33:12.911940",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Filling Entry",

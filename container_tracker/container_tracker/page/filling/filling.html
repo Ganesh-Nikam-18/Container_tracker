@@ -1,0 +1,101 @@
+<div class="filling-spa-container">
+    <div class="row">
+        <!-- Left Column: Filters and Details -->
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">Filling Details</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label>Delivery Note (Submitted)</label>
+                        <select id="sel-delivery-note" class="form-control">
+                            <option value="">Select Delivery Note...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Item</label>
+                        <select id="sel-item" class="form-control" disabled>
+                            <option value="">Select Item...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Gas Batch / Lot</label>
+                        <select id="sel-batch" class="form-control" disabled>
+                            <option value="">Select Batch...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Filling Operator</label>
+                        <input type="text" id="inp-operator" class="form-control" placeholder="Enter Operator Name">
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="stats-dashboard">
+                        <div class="stat-box">
+                            <div class="stat-label">Ordered Qty</div>
+                            <div class="stat-value" id="stat-ordered">0</div>
+                        </div>
+                        <div class="stat-box stat-pending">
+                            <div class="stat-label">Pending Qty</div>
+                            <div class="stat-value" id="stat-pending">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column: Scanning and Table -->
+        <div class="col-md-8">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">Scan Containers</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="scan-area">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-barcode"></i></span>
+                            <input type="text" id="inp-barcode" class="form-control input-lg" placeholder="Scan Barcode with Handheld/Bluetooth Scanner..." disabled>
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary btn-lg" id="btn-manual-add" disabled>Add</button>
+                            </span>
+                        </div>
+                        <p class="help-block">Make sure cursor is in the field above before scanning. Scanner should automatically submit.</p>
+                    </div>
+                    
+                    <div class="filling-summary-bar">
+                        <div class="summary-item">Total Scanned: <span id="summary-count" class="badge">0</span></div>
+                        <div class="summary-item">Total Capacity Filled: <span id="summary-capacity" class="badge badge-success">0.0</span></div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="tbl-scanned-containers">
+                            <thead>
+                                <tr>
+                                    <th>Container ID</th>
+                                    <th>Barcode</th>
+                                    <th>Type</th>
+                                    <th>Capacity</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr id="empty-state-row">
+                                    <td colspan="5" class="text-center text-muted">No containers scanned yet.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="text-right" style="margin-top: 15px;">
+                        <button class="btn btn-success btn-lg" id="btn-submit-filling" disabled>Submit Filling Entry</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
