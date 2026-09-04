@@ -11,7 +11,7 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 		'padding': '0 30px'
 	});
 
-	page.set_indicator("Receive containers back and settle the customer's container balance", 'blue');
+
 
 	let btn_back = page.add_inner_button('Back to list', () => {
 		frappe.set_route('List', 'Reconciliation');
@@ -26,7 +26,7 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 	// Inject HTML
 	$(page.body).html(`
 <style>
-	.recon-wrapper { max-width: 1100px; margin: 0 auto; padding: 15px; display: flex; gap: 20px; }
+	.recon-wrapper { max-width: 100%; margin: 0; padding: 15px 30px; display: flex; gap: 20px; }
 	.recon-left { flex: 1; min-width: 0; }
 	.recon-right { width: 320px; flex-shrink: 0; }
 	
@@ -69,11 +69,16 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 	
 	/* Scanner Group */
 	.scanner-group { display: flex; gap: 5px; }
-	.btn-icon { background: var(--control-bg, #f3f4f6); border: 1px solid var(--border-color, #d1d5db); padding: 0 12px; border-radius: 4px; color: var(--text-color, #4b5563); cursor: pointer; }
+	.btn-icon { background: var(--control-bg, #f3f4f6); border: 1px solid var(--border-color, #d1d5db); padding: 0 12px; border-radius: 4px; color: var(--text-color, #4b5563); cursor: pointer; white-space: nowrap; }
 	.btn-icon:hover { background: var(--bg-light-gray, #e5e7eb); }
-	.camera-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; }
-	.camera-box { background: #000; border-radius: 8px; width: 90%; max-width: 500px; height: 300px; overflow: hidden; position: relative; }
-	.close-camera { margin-top: 20px; background: var(--control-bg, #fff); color: var(--text-color); border: none; padding: 8px 20px; border-radius: 4px; font-weight: 600; cursor: pointer; }
+	/* Camera Box Inline */
+	.camera-box { background: #000; border-radius: 8px; min-height: 200px; color: #9ca3af; font-size: 13px; position: relative; overflow: hidden; text-align: center; }
+	.scanner-laser { position: absolute; width: 100%; height: 2px; background: #ef4444; box-shadow: 0 0 8px #ef4444, 0 0 15px #ef4444; top: 0; left: 0; animation: scan-laser 2s infinite linear; z-index: 10; display: none; }
+	.camera-status { min-height: 20px; margin-top: 8px; font-size: 12px; color: var(--text-muted, #6b7280); }
+	.camera-status.scanning { color: var(--blue-600, #2563eb); }
+	.camera-status.warning { color: var(--orange-600, #c2410c); }
+	.camera-status.success { color: var(--green-600, #059669); }
+	@keyframes scan-laser { 0% { top: 0%; } 50% { top: 98%; } 100% { top: 0%; } }
 	
 	/* Recent List */
 	.recent-row { display: flex; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border-color, #f3f4f6); }
@@ -100,12 +105,17 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 						<label class="f-label">Transporter</label>
 						<!-- Frappe Control will mount here -->
 					</div>
-					<div class="f-col">
+					<div class="f-col" style="flex: 2;">
 						<label class="f-label">Scan returned container</label>
 						<div class="scanner-group">
-							<input type="text" id="inp-barcode" class="f-input" placeholder="Camera or handheld scanner; Enter to add" disabled>
-							<button class="btn-icon" id="btn-camera" disabled><i class="fa fa-qrcode"></i></button>
+							<input type="text" id="inp-barcode" class="f-input" placeholder="Scan or type container ID / barcode" disabled>
+							<button class="btn-icon" id="btn-add" disabled>Add</button>
+							<button class="btn-icon" id="btn-camera" style="display:flex; align-items:center; gap:5px;"><i class="fa fa-camera"></i> Scan</button>
 						</div>
+						<div class="camera-box" id="camera-reader" style="display:none; margin-top:10px;">
+							<div class="scanner-laser" id="scanner-laser"></div>
+						</div>
+						<div class="camera-status" id="camera-status">Select a customer, then start the camera.</div>
 					</div>
 				</div>
 				
@@ -121,7 +131,7 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 		<!-- Card 2: Received -->
 		<div class="rc-card">
 			<div class="rc-card-header">2 · Received containers (<span id="lbl-count">0</span>)</div>
-			<div class="rc-card-body" style="padding: 0;">
+			<div class="rc-card-body" style="padding: 0; max-height: 400px; overflow-y: auto;">
 				<table class="table-containers">
 					<thead>
 						<tr>
@@ -194,22 +204,11 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 		<!-- Sidebar 2: Charge Defaults -->
 		<div class="rc-card">
 			<div class="rc-card-header">Charge defaults (from Container Settings)</div>
-			<div class="rc-card-body info-text">
-				<div><strong>Damaged</strong> — 35% of the container security deposit, charged to the transporter by default.</div>
-				<div style="margin-top:8px;"><strong>Lost</strong> — 100% of the security deposit, charged to the customer.</div>
-				<div style="margin-top:8px;"><strong>Heel shortfall</strong> — ₹850 per unit short (tolerance 2) plus a flat re-cooling charge of ₹18,000.</div>
-				<div style="margin-top:8px; color: #10b981;">Good returns move the asset back to the filling plant and free it for the next fill.</div>
-				<div style="margin-top:8px; color: #ef4444;">Damaged containers land in the Repair Bay and are blocked from filling.</div>
+			<div class="rc-card-body info-text" id="settings-panel">
+				<div>Loading settings...</div>
 			</div>
 		</div>
 	</div>
-</div>
-
-<!-- Camera Overlay -->
-<div class="camera-overlay" id="cam-overlay">
-	<div style="color: #fff; margin-bottom: 10px; font-size: 14px; font-weight: 600;">Scan Barcode</div>
-	<div class="camera-box" id="camera-reader"></div>
-	<button class="close-camera" id="btn-close-cam">Cancel</button>
 </div>
 	`);
 
@@ -218,17 +217,58 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 		customer: null,
 		transporter: null,
 		outstanding_containers: [],
-		scanned_containers: []
+		scanned_containers: [],
+		settings: {}
 	};
 
 	const tbl_body = $('#tbl-scanned');
 	const inp_barcode = $('#inp-barcode');
+	const btn_add = $('#btn-add');
 	const btn_cam = $('#btn-camera');
+	const camera_status = $('#camera-status');
 
 	// Frappe Controls
 	let customer_field = frappe.ui.form.make_control({
 		parent: $('#cust-wrapper'),
-		df: { fieldtype: 'Link', options: 'Customer', fieldname: 'customer' },
+		df: { 
+			fieldtype: 'Link', 
+			options: 'Customer', 
+			fieldname: 'customer',
+			onchange: function() {
+				let val = this.get_value() || null;
+				if (state.customer !== val) {
+					let previous_customer = state.customer;
+					state.customer = val;
+					$('#lbl-cust-name').text(state.customer || '-');
+					inp_barcode.val('');
+
+					if (!state.customer) {
+						reset_all();
+						return;
+					}
+
+					if (previous_customer && state.scanned_containers.length) {
+						clear_received_containers();
+						frappe.show_alert({
+							message: 'Received containers were cleared because the customer changed.',
+							indicator: 'orange'
+						});
+					}
+
+					set_scanner_enabled(true);
+					$('#quick-pick-list').html('<span style="font-size:11px; color:#9ca3af;">Loading outstanding containers...</span>');
+					let selected_customer = state.customer;
+
+					call_api("get_reconciliation_data", { customer: state.customer }, (r) => {
+						if (state.customer === selected_customer && r.message) {
+							state.outstanding_containers = r.message.containers || [];
+							render_quick_picks();
+							update_balances();
+						}
+					});
+				}
+			}
+		},
 		render_input: true,
 		only_input: true
 	});
@@ -248,76 +288,82 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 	});
 
 	// API Helpers
-	const call_api = (method, args, callback) => {
+	const call_api = (method, args, callback, always) => {
 		frappe.call({
 			method: "container_tracker.container_tracker.page.new_reconciliation.new_reconciliation." + method,
 			args: args,
-			callback: callback
+			callback: callback,
+			always: always
 		});
 	};
 
-	// Bindings
-	customer_field.$input.on('change', () => {
-		state.customer = customer_field.get_value();
-		$('#lbl-cust-name').text(state.customer || '-');
-
-		if (!state.customer) {
-			reset_all();
-			return;
-		}
-
-		inp_barcode.prop('disabled', false);
-		btn_cam.prop('disabled', false);
-
-		call_api("get_reconciliation_data", { customer: state.customer }, (r) => {
-			if (r.message) {
-				state.outstanding_containers = r.message.containers || [];
-				render_quick_picks();
-				update_balances();
-			}
-		});
-	});
-
+	// Transporter Change Handling (if any)
 	transporter_field.$input.on('change', () => {
 		state.transporter = transporter_field.get_value();
 	});
 
+	set_scanner_enabled(false);
+
+	function set_scanner_enabled(enabled) {
+		inp_barcode.prop('disabled', !enabled);
+		btn_add.prop('disabled', !enabled);
+		btn_cam.prop('disabled', !enabled);
+		if (!enabled) {
+			set_camera_status('Select a customer, then start the camera.');
+		}
+	}
+
+	function clear_received_containers() {
+		state.scanned_containers = [];
+		render_table();
+	}
+
 	// Add Container
 	const add_container = (passed_barcode = null) => {
-		let barcode = passed_barcode || inp_barcode.val().trim();
-		if (!barcode) return;
-
 		if (!state.customer) {
-			frappe.show_alert({ message: "Please select a Customer first.", indicator: "orange" });
+			frappe.show_alert({ message: 'Select a customer before adding a returned container.', indicator: 'orange' });
 			return;
 		}
 
-		inp_barcode.val('').prop('disabled', true);
+		let barcode = passed_barcode || inp_barcode.val().trim();
+		if (!barcode) return;
 
-		call_api("validate_and_fetch_container", { barcode: barcode, customer: state.customer }, (r) => {
+		let selected_customer = state.customer;
+		inp_barcode.val('').prop('disabled', true);
+		btn_add.prop('disabled', true);
+		btn_cam.prop('disabled', true);
+
+		call_api("validate_and_fetch_container", { barcode: barcode, customer: selected_customer }, (r) => {
+			if (state.customer !== selected_customer) {
+				return;
+			}
+
 			if (!r.exc && r.message) {
 				let c = r.message;
 
 				if (c.error) {
 					frappe.show_alert({ message: c.error, indicator: "orange" });
-				} else if (state.scanned_containers.find(x => x.name === c.name)) {
-					frappe.show_alert({ message: `Container ${c.name} already scanned.`, indicator: "orange" });
 				} else {
-					// Add defaults
-					c.condition = "Good";
-					c.charge_to = "None";
-					c.amount = 0;
-					c.penalty = 0;
-					c.heel_req = 0;
-					c.heel_back = 0;
-					c.remarks = "";
+					if (state.scanned_containers.find(x => x.name === c.name)) {
+						frappe.show_alert({ message: `Container ${c.name} already scanned.`, indicator: "orange" });
+					} else {
+						// Add defaults
+						c.condition = "Good";
+						c.charge_to = "None";
+						c.amount = 0;
+						c.penalty = 0;
+						c.heel_req = c.heel_req || 0;
+						c.heel_back = 0;
+						c.remarks = "";
 
-					state.scanned_containers.push(c);
-					render_table();
-					frappe.show_alert({ message: `${c.name} received!`, indicator: 'green' });
+						state.scanned_containers.push(c);
+						render_table();
+						frappe.show_alert({ message: `${c.name} received!`, indicator: 'green' });
+					}
 				}
 			}
-			inp_barcode.prop('disabled', false).focus();
+			set_scanner_enabled(Boolean(state.customer));
+			if (state.customer) inp_barcode.focus();
 		});
 	};
 
@@ -328,19 +374,23 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 		}
 	});
 
+	btn_add.on('click', () => add_container());
+
 	// Quick Pick
 	function render_quick_picks() {
 		if (!state.outstanding_containers || state.outstanding_containers.length === 0) {
 			$('#quick-pick-list').html('<span style="font-size: 11px; color: #9ca3af;">No outstanding containers found.</span>');
 			return;
 		}
-		let html = "";
-		state.outstanding_containers.forEach(c => {
-			if (!state.scanned_containers.find(sc => sc.name === c.name)) {
-				html += `<div class="ct-tag" onclick="$('#inp-barcode').val('${c.name}'); $('#inp-barcode').trigger({type: 'keypress', which: 13});">${c.name}</div>`;
-			}
+		let available_containers = state.outstanding_containers.filter(
+			c => !state.scanned_containers.find(sc => sc.name === c.name)
+		);
+		let html = `<span style="font-size:11px; color:#6b7280; width:100%;">${available_containers.length} container(s) outstanding. You can also scan or type any returned container.</span>`;
+		available_containers.forEach(c => {
+			let title = `Type: ${c.type} | DN: ${c.original_dn || '-'}`;
+			html += `<div class="ct-tag" title="${title}" onclick="$('#inp-barcode').val('${c.name}'); $(this).css({'opacity':'0.5', 'pointer-events':'none'}); $('#btn-add').click();">${c.name}</div>`;
 		});
-		if (html === "") {
+		if (available_containers.length === 0) {
 			html = '<span style="font-size: 11px; color: #10b981;">All outstanding containers received!</span>';
 		}
 		$('#quick-pick-list').html(html);
@@ -363,9 +413,9 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 					<td style="padding-left: 20px; font-weight: 600;">${c.name}</td>
 					<td>${c.type}</td>
 					<td style="color:#6b7280; font-size: 11px;">${c.original_dn || '-'}</td>
-					<td><input type="number" class="inline-input bind-input" data-field="heel_req" value="${c.heel_req}"></td>
+					<td><input type="number" class="inline-input bind-input" data-field="heel_req" value="${c.heel_req}" readonly style="background-color: var(--control-bg-disabled, #f9fafb); color: var(--text-muted, #9ca3af); cursor: not-allowed;"></td>
 					<td><input type="number" class="inline-input bind-input" data-field="heel_back" value="${c.heel_back}"></td>
-					<td><input type="number" class="inline-input bind-input" data-field="penalty" value="${c.penalty}"></td>
+					<td><input type="number" class="inline-input" value="${c.penalty}" readonly style="background-color: var(--control-bg-disabled, #f9fafb); color: var(--text-muted, #9ca3af); cursor: not-allowed;"></td>
 					<td>
 						<select class="inline-select bind-input" data-field="condition">
 							<option value="Good" ${c.condition === 'Good' ? 'selected' : ''}>Good</option>
@@ -394,7 +444,7 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 	}
 
 	// Two-way bindings for table inputs
-	$(document).on('change input', '.bind-input', function () {
+	$(document).on('change keyup', '.bind-input', function () {
 		let idx = $(this).closest('tr').data('idx');
 		let field = $(this).data('field');
 		let val = $(this).val();
@@ -403,7 +453,37 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 			val = parseFloat(val) || 0;
 		}
 
-		state.scanned_containers[idx][field] = val;
+		let c = state.scanned_containers[idx];
+		c[field] = val;
+
+		// Auto calculate amounts if condition or heel changes
+		if (field === 'condition') {
+			if (val === 'Damaged') {
+				c.charge_to = 'Supplier';
+				c.amount = (c.security_deposit || 0) * ((state.settings.damaged_container_charge || 0) / 100);
+			} else if (val === 'Lost') {
+				c.charge_to = 'Customer';
+				c.amount = (c.security_deposit || 0) * ((state.settings.lost_container_charge || 0) / 100);
+			} else {
+				c.charge_to = 'None';
+				c.amount = 0;
+			}
+			render_table();
+			return;
+		}
+
+		if (field === 'heel_back') {
+			let shortfall = Math.max(0, c.heel_req - c.heel_back);
+			c.penalty = shortfall * (state.settings.penalty_rate_per_unit_short || 0);
+			if (shortfall > 0) {
+				if (c.condition === 'Good') c.charge_to = 'Customer';
+			} else {
+				if (c.condition === 'Good' && c.amount === 0) c.charge_to = 'None';
+			}
+			$(this).closest('tr').find('[data-field="penalty"]').val(c.penalty);
+			$(this).closest('tr').find('[data-field="charge_to"]').val(c.charge_to);
+		}
+
 		update_balances();
 	});
 
@@ -441,21 +521,34 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 
 	// Camera Logic
 	let html5QrCode = null;
-	const overlay = $('#cam-overlay');
+	let last_scan_status_at = 0;
 
-	function stop_camera() {
+	function set_camera_status(message, status = '') {
+		camera_status.text(message).removeClass('scanning warning success').addClass(status);
+	}
+
+	function stop_camera(message = 'Camera stopped. You can type the barcode or scan again.') {
 		if (html5QrCode) {
-			html5QrCode.stop().then(() => {
-				html5QrCode.clear();
+			html5QrCode.stop().catch(() => {}).finally(() => {
+				Promise.resolve(html5QrCode.clear()).catch(() => {});
 				html5QrCode = null;
-				overlay.css('display', 'none');
+				$('#camera-reader').hide();
+				$('#btn-camera').html('<i class="fa fa-camera"></i> Scan').removeClass('active');
+				set_camera_status(message);
 			});
 		} else {
-			overlay.css('display', 'none');
+			$('#camera-reader').hide();
+			$('#btn-camera').html('<i class="fa fa-camera"></i> Scan').removeClass('active');
+			set_camera_status(message);
 		}
 	}
 
 	btn_cam.on('click', function () {
+		if (html5QrCode) {
+			stop_camera();
+			return;
+		}
+
 		if (typeof Html5Qrcode === 'undefined') {
 			frappe.require("/assets/frappe/node_modules/html5-qrcode/html5-qrcode.min.js", function () {
 				start_camera();
@@ -464,8 +557,6 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 			start_camera();
 		}
 	});
-
-	$('#btn-close-cam').on('click', stop_camera);
 
 	const beep = () => {
 		try {
@@ -483,15 +574,28 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 	};
 
 	function start_camera() {
-		overlay.css('display', 'flex');
+		$('#camera-reader').show();
+		$('#camera-reader').html('<div class="scanner-laser" id="scanner-laser" style="display: block;"></div>');
+		$('#btn-camera').html('<i class="fa fa-times"></i> Close').addClass('active');
+		set_camera_status('Starting rear camera…', 'scanning');
 		html5QrCode = new Html5Qrcode("camera-reader");
 
 		window.last_scanned = "";
 		window.last_scan_time = 0;
 
-		let config = { fps: 15, qrbox: { width: 300, height: 100 }, aspectRatio: 1.777778, disableFlip: false };
+		let config = {
+			fps: 20,
+			qrbox: { width: 300, height: 100 },
+			aspectRatio: 1.777778,
+			disableFlip: true,
+			experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+		};
+
 		if (typeof Html5QrcodeSupportedFormats !== 'undefined') {
-			config.formatsToSupport = [Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39];
+			config.formatsToSupport = [
+				Html5QrcodeSupportedFormats.CODE_128,
+				Html5QrcodeSupportedFormats.CODE_39,
+			];
 		}
 
 		html5QrCode.start(
@@ -502,14 +606,21 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 				window.last_scanned = decodedText;
 				window.last_scan_time = Date.now();
 				beep();
-				stop_camera();
+				stop_camera('');
 				add_container(decodedText);
 			},
-			(err) => { }
+			() => {
+				if (Date.now() - last_scan_status_at > 1200) {
+					set_camera_status('Looking for a barcode. Keep it inside the white frame and reduce glare.', 'warning');
+					last_scan_status_at = Date.now();
+				}
+			}
 		).catch((err) => {
-			frappe.msgprint("Camera error: " + err);
-			stop_camera();
+			set_camera_status(`Camera could not start: ${err}`, 'warning');
+			stop_camera('Camera could not start. Check camera permission, then try again.');
 		});
+
+		set_camera_status('Looking for a Code 128 barcode. Keep it inside the white frame.', 'scanning');
 	}
 
 	// Fetch Recents
@@ -540,6 +651,15 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 
 	// Submit
 	function submit_entry() {
+		if (!state.customer) {
+			frappe.show_alert({ message: 'Select a customer before submitting.', indicator: 'orange' });
+			return;
+		}
+		if (!state.scanned_containers.length) {
+			frappe.show_alert({ message: 'Add at least one returned container before submitting.', indicator: 'orange' });
+			return;
+		}
+
 		let payload = {
 			customer: state.customer,
 			transporter: state.transporter,
@@ -558,13 +678,15 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 					reset_all();
 					load_recents();
 				}
+			}, () => {
 				btn_submit.prop('disabled', false).html('Submit reconciliation');
 			});
 		});
 	}
 
 	function reset_all() {
-		state.scanned_containers = [];
+		stop_camera();
+		clear_received_containers();
 		state.outstanding_containers = [];
 		state.customer = null;
 		state.transporter = null;
@@ -572,12 +694,29 @@ frappe.pages['new-reconciliation'].on_page_load = function (wrapper) {
 		customer_field.set_value('');
 		transporter_field.set_value('');
 		$('#lbl-cust-name').text('-');
-		inp_barcode.prop('disabled', true).val('');
-		btn_cam.prop('disabled', true);
+		inp_barcode.val('');
+		set_scanner_enabled(false);
+		$('#quick-pick-list').html('<span style="font-size:11px; color:#9ca3af;">Select customer to view outstanding containers</span>');
+	}
 
-		render_table();
+	function load_settings() {
+		call_api("get_container_settings", {}, (r) => {
+			if (r.message) {
+				state.settings = r.message;
+				let s = state.settings;
+				let html = `
+					<div><strong>Damaged</strong> — ${s.damaged_container_charge || 0}% of the container security deposit, charged to the transporter by default.</div>
+					<div style="margin-top:8px;"><strong>Lost</strong> — ${s.lost_container_charge || 0}% of the security deposit, charged to the customer.</div>
+					<div style="margin-top:8px;"><strong>Heel shortfall</strong> — ₹${s.penalty_rate_per_unit_short || 0} for each unit below the required heel.</div>
+					<div style="margin-top:8px; color: #10b981;">Good returns move the asset back to the filling plant and free it for the next fill.</div>
+					<div style="margin-top:8px; color: #ef4444;">Damaged containers land in the Repair Bay and are blocked from filling.</div>
+				`;
+				$('#settings-panel').html(html);
+			}
+		});
 	}
 
 	// Init
 	load_recents();
+	load_settings();
 }

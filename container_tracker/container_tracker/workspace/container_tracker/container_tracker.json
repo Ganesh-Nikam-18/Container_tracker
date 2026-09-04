@@ -1,7 +1,12 @@
 {
  "app": "container_tracker",
- "charts": [],
- "content": "[{\"id\":\"overview-card\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Container Tracker</span>\",\"col\":12}}]",
+ "charts": [
+  {
+   "chart_name": "Fleet Status Split",
+   "label": "Fleet Status Split"
+  }
+ ],
+ "content": "[{\"id\":\"overview-card\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Container Tracker</span>\",\"col\":12}},{\"id\":\"qJW3_ymGoy\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total containers\",\"col\":3}},{\"id\":\"51HUhfG_S2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Available to fill\",\"col\":3}},{\"id\":\"lcmAZKfSmd\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"With customers\",\"col\":3}},{\"id\":\"dkB1T1gsZF\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Damaged / under repair\",\"col\":3}},{\"id\":\"ePcxSgaYQL\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Filled Awaiting Dispatch\",\"col\":3}},{\"id\":\"t8k0GML5iF\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Deposit Exposure\",\"col\":3}},{\"id\":\"GGwHdZhZ42\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Chargebacks\",\"col\":3}},{\"id\":\"rimEo_EHtd\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Hydro test due \u2264 90 days\",\"col\":3}},{\"id\":\"Efxeo2PQTK\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"JPL680pM8R\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Fleet Status Split\",\"col\":6}}]",
  "creation": "2024-01-01 00:00:00",
  "custom_blocks": [],
  "docstatus": 0,
@@ -13,11 +18,44 @@
  "is_hidden": 0,
  "label": "Container Tracker",
  "links": [],
- "modified": "2026-08-25 11:35:20.365542",
+ "modified": "2026-09-04 12:26:33.905100",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Tracker",
- "number_cards": [],
+ "number_cards": [
+  {
+   "label": "Total containers",
+   "number_card_name": "Total containers"
+  },
+  {
+   "label": "Filled Awaiting Dispatch",
+   "number_card_name": "Filled Awaiting Dispatch"
+  },
+  {
+   "label": "Available to fill",
+   "number_card_name": "Available to fill"
+  },
+  {
+   "label": "Deposit Exposure",
+   "number_card_name": "Deposit Exposure"
+  },
+  {
+   "label": "With customers",
+   "number_card_name": "With Customers"
+  },
+  {
+   "label": "Open Chargebacks",
+   "number_card_name": "Open Chargebacks"
+  },
+  {
+   "label": "Damaged / under repair",
+   "number_card_name": "Damaged Under Repair"
+  },
+  {
+   "label": "Hydro test due \u2264 90 days",
+   "number_card_name": "Hydro Test Due"
+  }
+ ],
  "owner": "Administrator",
  "parent_page": "",
  "public": 1,

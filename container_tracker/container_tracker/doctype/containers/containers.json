@@ -128,9 +128,14 @@
    "options": "Empty : ready\nNo"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "test_due",
    "fieldtype": "Date",
-   "label": "Test Due"
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Test Due",
+   "read_only": 1
   },
   {
    "fieldname": "naming_series",
@@ -219,13 +224,19 @@
    "link_fieldname": "container"
   },
   {
-   "group": "returns",
+   "group": "Returns",
    "link_doctype": "Reconciliation",
    "link_fieldname": "container",
    "table_fieldname": "containers"
+  },
+  {
+   "group": "Test",
+   "link_doctype": "Hydro Test",
+   "link_fieldname": "containers",
+   "table_fieldname": "containers_under_test"
   }
  ],
- "modified": "2026-09-02 13:14:28.952467",
+ "modified": "2026-09-04 11:41:59.068729",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Containers",

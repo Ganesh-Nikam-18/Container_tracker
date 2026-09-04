@@ -1,0 +1,40 @@
+{
+ "based_on": "",
+ "chart_name": "Fleet Status Split",
+ "chart_type": "Group By",
+ "creation": "2026-09-04 12:25:42.503250",
+ "currency": "",
+ "docstatus": 0,
+ "doctype": "Dashboard Chart",
+ "document_type": "Containers",
+ "dynamic_filters_json": "[]",
+ "filters_json": "[[\"Containers\",\"status\",\"!=\",\"Scrapped\"]]",
+ "from_date": "2026-09-04",
+ "group_by_based_on": "status",
+ "group_by_type": "Count",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "modified": "2026-09-04 12:27:08.579371",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "Fleet Status Split",
+ "number_of_groups": 0,
+ "owner": "Administrator",
+ "parent_document_type": "",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "show_values_over_chart": 0,
+ "source": "",
+ "time_interval": "Daily",
+ "timeseries": 0,
+ "timespan": "Select Date Range",
+ "to_date": "2026-09-04",
+ "type": "Donut",
+ "use_report_chart": 0,
+ "value_based_on": "",
+ "y_axis": []
+}

@@ -10,11 +10,13 @@
   "type",
   "delivery_note",
   "condition",
+  "column_break_xrqp",
   "heel_req",
   "heel_back",
-  "charge",
   "charge_to",
+  "charge",
   "penalty",
+  "section_break_uarj",
   "remarks"
  ],
  "fields": [
@@ -32,9 +34,10 @@
   {
    "fetch_from": "container.type",
    "fieldname": "type",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Type",
+   "options": "Container Types",
    "read_only": 1
   },
   {
@@ -55,18 +58,23 @@
    "fieldname": "heel_req",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Heel Req"
+   "label": "Heel Req",
+   "non_negative": 1,
+   "read_only": 1
   },
   {
    "fieldname": "heel_back",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Heel Back"
+   "label": "Heel Back",
+   "non_negative": 1
   },
   {
    "fieldname": "charge",
    "fieldtype": "Currency",
-   "label": "Charge"
+   "label": "Charge",
+   "non_negative": 1,
+   "read_only": 1
   },
   {
    "fieldname": "charge_to",
@@ -79,19 +87,31 @@
    "fieldname": "penalty",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Penalty"
+   "label": "Penalty",
+   "non_negative": 1,
+   "read_only": 1
   },
   {
    "fieldname": "remarks",
    "fieldtype": "Small Text",
-   "label": "Remarks"
+   "in_list_view": 1,
+   "label": "Remarks",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "column_break_xrqp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_uarj",
+   "fieldtype": "Section Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-09-02 13:13:43.206286",
+ "modified": "2026-09-03 12:44:21.216589",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Reconciliation Items",

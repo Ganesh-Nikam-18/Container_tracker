@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "CRC-.YYYY-.#####",
+ "autoname": "CRC-.YYYY.-.#####",
  "creation": "2026-08-26 16:20:13.352893",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -111,8 +111,14 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "links": [],
- "modified": "2026-08-26 16:58:29.131566",
+ "links": [
+  {
+   "group": "Chargebacks",
+   "link_doctype": "Chargebacks",
+   "link_fieldname": "source_reconciliation"
+  }
+ ],
+ "modified": "2026-09-03 14:43:16.097295",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Reconciliation",
@@ -120,6 +126,7 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -128,6 +135,7 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "select": 1,
    "share": 1,
    "submit": 1,
    "write": 1

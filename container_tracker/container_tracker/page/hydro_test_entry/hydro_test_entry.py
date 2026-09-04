@@ -11,14 +11,14 @@ def get_dashboard_data():
     overdue_count = frappe.db.count("Containers", filters={
         "docstatus": 1,
         "test_due": ["<", current_date],
-        "status": ["in", ["Available", "Filled", "In Transit", "With Customer"]]
+        "status": ["in", ["Available", "Under Maintenance"]]
     })
     
     # Due in 60 days
     due_in_60_count = frappe.db.count("Containers", filters={
         "docstatus": 1,
         "test_due": ["between", [current_date, sixty_days_from_now]],
-        "status": ["in", ["Available", "Filled", "In Transit", "With Customer"]]
+        "status": ["in", ["Available", "Under Maintenance"]]
     })
     
     # Recent test entries
@@ -52,7 +52,7 @@ def get_pending_containers(container_type=None):
     filters = {
         "docstatus": 1,
         "test_due": ["<=", sixty_days_from_now],
-        "status": ["in", ["Available", "Filled", "In Transit", "With Customer"]]
+        "status": ["in", ["Available", "Under Maintenance"]]
     }
     
     if container_type and container_type != "All container types":
@@ -79,7 +79,7 @@ def get_pending_containers(container_type=None):
 
 @frappe.whitelist()
 def get_container_details(container_id):
-    if not frappe.db.exists("Containers", {"name": container_id, "docstatus": 1, "status": ["in", ["Available", "Filled", "In Transit", "With Customer"]]}):
+    if not frappe.db.exists("Containers", {"name": container_id, "docstatus": 1, "status": ["in", ["Available", "Under Maintenance"]]}):
         frappe.throw(f"Container {container_id} is either invalid, cancelled, or not in a valid status for testing.")
         
     container = frappe.get_doc("Containers", container_id)

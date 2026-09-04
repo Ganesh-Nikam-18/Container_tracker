@@ -1,90 +1,59 @@
-import frappe
 import json
 
-@frappe.whitelist()
-def get_reconciliation_data(customer):
-	if not customer:
-		return {"total_outstanding": 0, "containers": []}
-		
-	# 1. Find all submitted Container Filling Entries for this customer
-	cfes = frappe.get_all("Container Filling Entry", filters={"customer": customer, "docstatus": 1}, pluck="name")
-	
-	if not cfes:
-		return {"total_outstanding": 0, "containers": []}
-		
-	# 2. Get all containers listed in those CFEs
-	cfi_list = frappe.get_all("Container Filling Items", filters={"parent": ["in", cfes]}, fields=["container", "parent"])
-	
-	# Mapping of container to its original DN (from the CFE's delivery_note field)
-	# Wait, CFE has delivery_note field directly on the parent.
-	cfe_dn_map = {}
-	cfe_docs = frappe.get_all("Container Filling Entry", filters={"name": ["in", cfes]}, fields=["name", "delivery_note"])
-	for c in cfe_docs:
-		cfe_dn_map[c.name] = c.delivery_note
+import frappe
 
-	container_names = list(set([i.container for i in cfi_list]))
-	
-	if not container_names:
-		return {"total_outstanding": 0, "containers": []}
-		
-	# 3. Filter only those containers that are STILL outstanding (status != Available/Damaged/Scrapped)
-	outstanding_containers = frappe.get_all(
-		"Containers",
-		filters={"name": ["in", container_names], "status": "With Customer", "custodian": customer},
-		fields=["name", "type", "capacity", "container_barcode"]
-	)
-	
-	# Map the Original DN back to the containers
-	for cont in outstanding_containers:
-		# Find which CFE parent this container belonged to
-		for i in cfi_list:
-			if i.container == cont.name:
-				cont["original_dn"] = cfe_dn_map.get(i.parent, "-")
-				break
-	
+
+@frappe.whitelist()
+def get_reconciliation_data(customer: str | None = None):
+	outstanding_containers = get_customer_outstanding_containers(customer)
 	return {
 		"total_outstanding": len(outstanding_containers),
 		"containers": outstanding_containers
 	}
 
+
 @frappe.whitelist()
-def validate_and_fetch_container(barcode, customer):
-	# Allow passing either ID or barcode
-	container = frappe.db.get_value("Containers", {"name": barcode}, ["name", "status", "custodian", "type", "capacity"], as_dict=True)
-	
+def validate_and_fetch_container(barcode: str, customer: str | None = None):
+	if not customer:
+		return {"error": "Select a customer before adding a returned container."}
+
+	container = get_container_by_barcode_or_name(barcode)
 	if not container:
-		container = frappe.db.get_value("Containers", {"container_barcode": barcode}, ["name", "status", "custodian", "type", "capacity"], as_dict=True)
-		
-	if not container:
-		return {"error": "Container not found"}
-		
+		return {"error": "Container not found."}
 	if container.status != "With Customer":
-		return {"error": f"Container {container.name} is not 'With Customer'. Current status: {container.status}"}
-		
-	if container.custodian and container.custodian != customer:
-		return {"error": f"Container {container.name} is with {container.custodian}, not {customer}."}
-		
-	# Find the original delivery note (best effort from Container Filling Entry)
-	original_dn = "-"
-	cfes = frappe.get_all("Container Filling Entry", filters={"customer": customer, "docstatus": 1}, pluck="name")
-	if cfes:
-		items = frappe.get_all("Container Filling Items", filters={"parent": ["in", cfes], "container": container.name}, fields=["parent"], order_by="creation desc", limit=1)
-		if items:
-			cfe_doc = frappe.db.get_value("Container Filling Entry", items[0].parent, "delivery_note")
-			if cfe_doc:
-				original_dn = cfe_doc
-	
+		return {
+			"error": f"Container {container.name} is not with a customer. Current status: {container.status}."
+		}
+
+	outstanding_containers = {
+		container.name: container for container in get_customer_outstanding_containers(customer)
+	}
+	outstanding_container = outstanding_containers.get(container.name)
+	if not outstanding_container:
+		return {
+			"error": f"Container {container.name} is not in a submitted Container Filling Entry for {customer}."
+		}
+
+	item_code = outstanding_container.item_code or container.gas_item
 	return {
 		"name": container.name,
 		"type": container.type,
 		"capacity": container.capacity,
-		"original_dn": original_dn
+		"original_dn": outstanding_container.original_dn,
+		"security_deposit": get_security_deposit(container.type),
+		"heel_req": get_heel_requirement(container.type, item_code),
+		"custodian": container.custodian,
 	}
+
+@frappe.whitelist()
+def get_container_settings():
+	return frappe.get_cached_doc("Container Settings").as_dict()
 
 @frappe.whitelist()
 def get_recent_reconciliations():
 	recent = frappe.get_all(
 		"Reconciliation",
+		filters={"docstatus": ["!=", 2]},
 		fields=["name", "posting_date", "customer", "transporter", "containers_received", "docstatus", "damage_and_loss_charges"],
 		limit_page_length=5,
 		order_by="creation desc"
@@ -92,22 +61,69 @@ def get_recent_reconciliations():
 	return recent
 
 @frappe.whitelist()
-def submit_reconciliation(payload):
+def submit_reconciliation(payload: str):
 	data = json.loads(payload)
-	
+	customer = data.get("customer")
+	containers = data.get("containers", [])
+	if not customer:
+		frappe.throw("Select a customer before submitting the reconciliation.")
+	if not containers:
+		frappe.throw("Add at least one returned container before submitting.")
+
+	outstanding_containers = {
+		container.name: container for container in get_customer_outstanding_containers(customer)
+	}
+	container_names = [container.get("name") for container in containers]
+	if len(container_names) != len(set(container_names)):
+		frappe.throw("The same container cannot be reconciled more than once.")
+
+	invalid_containers = [
+		container_name for container_name in container_names if container_name not in outstanding_containers
+	]
+	if invalid_containers:
+		frappe.throw(
+			"These containers are no longer outstanding with the selected customer: "
+			+ ", ".join(str(container_name) for container_name in invalid_containers)
+		)
+
+	settings = frappe.get_cached_doc("Container Settings").as_dict()
+
+	for c in containers:
+		c["penalty"] = calculate_heel_penalty(
+			c.get("heel_req"), c.get("heel_back")
+		)
+		
+		out_container = outstanding_containers.get(c.get("name"))
+		if out_container:
+			security_deposit = get_security_deposit(out_container.type)
+			condition = c.get("condition")
+			
+			if condition == "Damaged":
+				charge_pct = settings.get("damaged_container_charge") or 0
+				c["amount"] = float(security_deposit) * (float(charge_pct) / 100.0)
+			elif condition == "Lost":
+				charge_pct = settings.get("lost_container_charge") or 0
+				c["amount"] = float(security_deposit) * (float(charge_pct) / 100.0)
+			else:
+				c["amount"] = 0.0
+
+	total_charges = sum(float(c.get("amount") or 0) for c in containers)
+	total_penalty = sum(float(c["penalty"]) for c in containers)
+
 	# Create Reconciliation doc
 	doc = frappe.get_doc({
 		"doctype": "Reconciliation",
-		"customer": data.get("customer"),
+		"customer": customer,
 		"transporter": data.get("transporter"),
 		"posting_date": frappe.utils.today(),
-		"containers_received": len(data.get("containers", [])),
-		"damage_and_loss_charges": data.get("total_charges", 0),
-		"heel_shortfall_penalty": data.get("total_penalty", 0),
-		"total_recovery": data.get("total_recovery", 0)
+		"containers_received": len(containers),
+		"damage_and_loss_charges": total_charges,
+		"heel_shortfall_penalty": total_penalty,
+		"total_recovery": total_charges + total_penalty,
 	})
 	
-	for c in data.get("containers", []):
+	for c in containers:
+		out_container = outstanding_containers[c.get("name")]
 		doc.append("containers", {
 			"container": c.get("name"),
 			"condition": c.get("condition"),
@@ -117,20 +133,157 @@ def submit_reconciliation(payload):
 			"remarks": c.get("remarks"),
 			"heel_req": c.get("heel_req") or 0,
 			"heel_back": c.get("heel_back") or 0,
+			"delivery_note": out_container.original_dn,
 		})
 		
-		# Update container status
-		cont_doc = frappe.get_doc("Containers", c.get("name"))
-		if c.get("condition") == "Damaged":
-			cont_doc.db_set("status", "Damaged")
-		elif c.get("condition") == "Lost":
-			cont_doc.db_set("status", "Scrapped")
-		else:
-			cont_doc.db_set("status", "Available")
-			
-		cont_doc.db_set("custodian", "")
-		
 	doc.insert(ignore_permissions=True)
+	
+	# Generate Chargebacks if any
+	cb_customer_items = []
+	cb_supplier_items = []
+	cust_charges = 0
+	supp_charges = 0
+	
+	for c in containers:
+		if float(c.get("amount") or 0) > 0 or float(c.get("penalty") or 0) > 0:
+			item = {
+				"container": c.get("name"),
+				"condition_on_return": c.get("condition"),
+				"remarks": c.get("remarks")
+			}
+			amt = float(c.get("amount") or 0) + float(c.get("penalty") or 0)
+			if c.get("charge_to") == "Customer":
+				cb_customer_items.append(item)
+				cust_charges += amt
+			elif c.get("charge_to") == "Supplier":
+				cb_supplier_items.append(item)
+				supp_charges += amt
+				
+	if cb_customer_items and data.get("customer"):
+		cb = frappe.get_doc({
+			"doctype": "Chargebacks",
+			"document_type": "Customer",
+			"party": data.get("customer"),
+			"source_reconciliation": doc.name,
+			"containers_charged": len(cb_customer_items),
+			"amount": cust_charges,
+			"containers": cb_customer_items
+		}).insert(ignore_permissions=True)
+		cb.submit()
+		doc.append("chargebacks_raised", {
+			"chargebacks": cb.name
+		})
+		
+	if cb_supplier_items and data.get("transporter"):
+		cb = frappe.get_doc({
+			"doctype": "Chargebacks",
+			"document_type": "Supplier",
+			"party": data.get("transporter"),
+			"source_reconciliation": doc.name,
+			"containers_charged": len(cb_supplier_items),
+			"amount": supp_charges,
+			"containers": cb_supplier_items
+		}).insert(ignore_permissions=True)
+		cb.submit()
+		doc.append("chargebacks_raised", {
+			"chargebacks": cb.name
+		})
+
+	if cb_customer_items or cb_supplier_items:
+		doc.save(ignore_permissions=True)
+
 	doc.submit()
 	
 	return doc.name
+
+
+def get_customer_outstanding_containers(customer: str | None):
+	if not customer:
+		return []
+
+	filling_entries = frappe.get_all(
+		"Container Filling Entry",
+		filters={"customer": customer, "docstatus": 1},
+		fields=["name", "delivery_note", "item"],
+		order_by="creation desc",
+	)
+	if not filling_entries:
+		return []
+
+	entry_details = {entry.name: entry for entry in filling_entries}
+	entry_positions = {entry.name: position for position, entry in enumerate(filling_entries)}
+	filled_items = frappe.get_all(
+		"Container Filling Items",
+		filters={
+			"parent": ["in", list(entry_details)],
+			"parenttype": "Container Filling Entry",
+		},
+		fields=["container", "parent"],
+	)
+
+	container_entries = {}
+	for item in filled_items:
+		current_entry = container_entries.get(item.container)
+		if item.container and (
+			current_entry is None or entry_positions[item.parent] < entry_positions[current_entry]
+		):
+			container_entries[item.container] = item.parent
+	if not container_entries:
+		return []
+
+	containers = frappe.get_all(
+		"Containers",
+		filters={
+			"name": ["in", list(container_entries)],
+			"status": "With Customer",
+		},
+		fields=["name", "type", "capacity", "container_barcode"],
+	)
+	for container in containers:
+		filling_entry = entry_details[container_entries[container.name]]
+		container["original_dn"] = filling_entry.delivery_note or "-"
+		container["item_code"] = filling_entry.item
+
+	return containers
+
+
+def get_container_by_barcode_or_name(barcode: str):
+	container = frappe.db.get_value(
+		"Containers",
+		{"name": barcode},
+		["name", "status", "custodian", "type", "capacity", "gas_item"],
+		as_dict=True,
+	)
+	if container:
+		return container
+
+	return frappe.db.get_value(
+		"Containers",
+		{"container_barcode": barcode},
+		["name", "status", "custodian", "type", "capacity", "gas_item"],
+		as_dict=True,
+	)
+
+
+def get_security_deposit(container_type: str):
+	return frappe.db.get_value("Container Types", container_type, "security_deposit") or 0
+
+
+def get_heel_requirement(container_type: str, item_code: str | None):
+	if not item_code:
+		return 0
+
+	return (
+		frappe.db.get_value(
+			"Item Capacity Matrix",
+			{"parent": container_type, "item": item_code},
+			"min_retained",
+		)
+		or 0
+	)
+
+
+def calculate_heel_penalty(heel_requirement, heel_returned):
+	shortfall = max(float(heel_requirement or 0) - float(heel_returned or 0), 0)
+	penalty_rate = frappe.db.get_single_value("Container Settings", "penalty_rate_per_unit_short") or 0
+	return shortfall * float(penalty_rate)

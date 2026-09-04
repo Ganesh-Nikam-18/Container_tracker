@@ -209,7 +209,7 @@ frappe.pages['hydro-test-entry'].on_page_load = function (wrapper) {
                 return {
                     filters: {
                         docstatus: 1,
-                        status: ['in', ['Available', 'Filled', 'In Transit', 'With Customer']]
+                        status: ['in', ['Available', 'Under Maintenance']]
                     }
                 };
             },
