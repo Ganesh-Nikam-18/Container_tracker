@@ -174,7 +174,10 @@ def submit_reconciliation(payload: str):
 			"chargebacks": cb.name
 		})
 		
-	if cb_supplier_items and data.get("transporter"):
+	if cb_supplier_items:
+		if not data.get("transporter"):
+			frappe.throw("You have assigned charges to the Transporter/Supplier, but no Transporter is selected at the top.")
+			
 		cb = frappe.get_doc({
 			"doctype": "Chargebacks",
 			"document_type": "Supplier",
