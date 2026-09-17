@@ -1,0 +1,13 @@
+{
+ "creation": "2026-09-07 11:24:02.840521",
+ "docstatus": 0,
+ "doctype": "Dashboard Chart Source",
+ "idx": 0,
+ "modified": "2026-09-07 11:24:02.840521",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "container_tracker.container_tracker.api.get_filling_vs_returns",
+ "owner": "Administrator",
+ "source_name": "container_tracker.container_tracker.api.get_filling_vs_returns",
+ "timeseries": 0
+}

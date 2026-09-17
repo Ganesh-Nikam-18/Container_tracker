@@ -7,20 +7,16 @@
  "field_order": [
   "section_break_po9v",
   "posting_date",
-  "customer",
+  "delivery_note_date",
   "item",
   "amended_from",
   "column_break_ixog",
   "delivery_note",
-  "delivery_note_date",
+  "customer",
   "operator",
-  "containers_filled",
   "quantity_posted",
   "containers_section",
-  "container_filling_items",
-  "used_containers_count",
-  "container_ledger_entries_posted_section",
-  "cle_items"
+  "container_filling_items"
  ],
  "fields": [
   {
@@ -102,12 +98,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "containers_filled",
-   "fieldtype": "Float",
-   "label": "Containers Filled",
-   "read_only": 1
-  },
-  {
    "fieldname": "quantity_posted",
    "fieldtype": "Float",
    "in_filter": 1,
@@ -122,34 +112,10 @@
    "label": "Containers"
   },
   {
-   "fieldname": "container_ledger_entries_posted_section",
-   "fieldtype": "Section Break",
-   "label": "Container Ledger Entries Posted"
-  },
-  {
    "fieldname": "container_filling_items",
    "fieldtype": "Table",
    "label": "Container Filling Items",
    "options": "Container Filling Items",
-   "read_only": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "cle_items",
-   "fieldtype": "Table",
-   "label": "CLE Items",
-   "no_copy": 1,
-   "options": "CLE Items",
-   "read_only": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "used_containers_count",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Used Containers (count)",
-   "no_copy": 1,
-   "non_negative": 1,
    "read_only": 1
   }
  ],
@@ -157,8 +123,19 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "links": [],
- "modified": "2026-09-02 12:33:12.911940",
+ "links": [
+  {
+   "group": "Ledger Entry's",
+   "link_doctype": "Container Ledger Entry",
+   "link_fieldname": "reference_document_name"
+  },
+  {
+   "group": "Asset Movement",
+   "link_doctype": "Asset Movement",
+   "link_fieldname": "reference_name"
+  }
+ ],
+ "modified": "2026-09-11 09:33:36.523772",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Filling Entry",
@@ -176,6 +153,30 @@
    "role": "System Manager",
    "share": 1,
    "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Asset Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Asset User",
+   "share": 1,
    "write": 1
   }
  ],

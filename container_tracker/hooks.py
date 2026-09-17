@@ -16,7 +16,7 @@ add_to_apps_screen = [
 		"name": "container_tracker",
 		"logo": "/assets/container_tracker/shipping-timed.png",
 		"title": "Container Tracker",
-		"route": "/desk/container-tracker",
+		"route": "/app/container-tracker",
 		# "has_permission": "container_tracker.api.permission.has_app_permission"
 	}
 ]

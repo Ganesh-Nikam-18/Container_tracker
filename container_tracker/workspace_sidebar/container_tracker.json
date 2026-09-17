@@ -22,21 +22,9 @@
    "icon": "blocks",
    "indent": 0,
    "keep_closed": 0,
-   "label": "Home",
+   "label": "Dashboard",
    "link_to": "Container Tracker",
    "link_type": "Workspace",
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 1,
-   "collapsible": 1,
-   "icon": "chart-no-axes-combined",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Dashboard",
-   "link_to": "container-dashboard",
-   "link_type": "Page",
    "show_arrow": 0,
    "type": "Link"
   },
@@ -216,7 +204,7 @@
    "type": "Section Break"
   }
  ],
- "modified": "2026-09-04 12:53:29.133845",
+ "modified": "2026-09-07 12:52:20.176368",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Tracker",

@@ -7,9 +7,23 @@
  "field_order": [
   "details_section",
   "datetime",
-  "container",
+  "item_code",
+  "uom",
   "filled_qty",
-  "asset_movement"
+  "from",
+  "to",
+  "column_break_ckby",
+  "container",
+  "entry_type",
+  "asset_movement",
+  "party",
+  "customer_name",
+  "delivery_note",
+  "dn_date",
+  "reference_section",
+  "reference_document_type",
+  "column_break_bgcu",
+  "reference_document_name"
  ],
  "fields": [
   {
@@ -23,8 +37,8 @@
    "in_filter": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Datetime",
-   "reqd": 1
+   "label": "Posting Datetime",
+   "read_only": 1
   },
   {
    "fieldname": "container",
@@ -34,7 +48,7 @@
    "in_standard_filter": 1,
    "label": "Container",
    "options": "Containers",
-   "reqd": 1
+   "read_only": 1
   },
   {
    "fieldname": "filled_qty",
@@ -43,7 +57,8 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Filled Qty",
-   "non_negative": 1
+   "non_negative": 1,
+   "read_only": 1
   },
   {
    "fieldname": "asset_movement",
@@ -52,13 +67,123 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Asset Movement",
-   "options": "Asset Movement"
+   "options": "Asset Movement",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ckby",
+   "fieldtype": "Column Break"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference"
+  },
+  {
+   "fieldname": "reference_document_type",
+   "fieldtype": "Link",
+   "label": "Reference Document Type",
+   "no_copy": 1,
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_bgcu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reference_document_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Reference Document Name",
+   "no_copy": 1,
+   "options": "reference_document_type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Code",
+   "no_copy": 1,
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "item_code.stock_uom",
+   "fieldname": "uom",
+   "fieldtype": "Data",
+   "label": "UOM",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "party",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "no_copy": 1,
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "party.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "from",
+   "fieldtype": "Data",
+   "label": "From",
+   "read_only": 1
+  },
+  {
+   "fieldname": "entry_type",
+   "fieldtype": "Select",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Entry Type",
+   "options": "Inward\nOutward",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to",
+   "fieldtype": "Data",
+   "label": "To",
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivery_note",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Delivery Note",
+   "options": "Delivery Note",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "delivery_note.posting_date",
+   "fieldname": "dn_date",
+   "fieldtype": "Date",
+   "label": "DN Date",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
+ "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-08-25 15:29:41.490172",
+ "modified": "2026-09-09 18:20:39.422775",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Ledger Entry",

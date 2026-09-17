@@ -7,24 +7,18 @@
  "field_order": [
   "section_break_8npf",
   "naming_series",
-  "gas_item",
-  "status",
-  "last_filled",
   "container_barcode",
-  "amended_from",
+  "last_filled",
   "column_break_rdyp",
   "asset",
   "asset_name",
-  "asset_item",
   "asset_category",
-  "fit_to_fill",
   "test_due",
   "column_break_bloz",
+  "status",
   "type",
   "capacity",
   "tare_weight",
-  "custodian",
-  "residual",
   "section_break_item_capacities",
   "item_capacities_html"
  ],
@@ -34,16 +28,6 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Containers",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
-  },
-  {
    "fetch_from": "asset_category.custom_default_container_type",
    "fieldname": "type",
    "fieldtype": "Link",
@@ -51,29 +35,17 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Container Type",
+   "no_copy": 1,
    "options": "Container Types",
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fetch_from": "type.default_gas_item",
-   "fieldname": "gas_item",
-   "fieldtype": "Link",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Gas Item",
-   "options": "Item",
    "read_only": 1,
    "reqd": 1
   },
   {
    "fieldname": "last_filled",
    "fieldtype": "Date",
-   "in_filter": 1,
    "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Last Filled"
+   "label": "Last Filled",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_bloz",
@@ -89,17 +61,9 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Available\nFilled\nIn Transit\nWith Customer\nUnder Maintenance\nDamaged\nScrapped",
+   "options": "Available\nFilled\nIn Transit\nWith Customer\nDamaged\nScrapped",
    "read_only": 1,
    "reqd": 1
-  },
-  {
-   "fieldname": "custodian",
-   "fieldtype": "Data",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Custodian"
   },
   {
    "fieldname": "asset",
@@ -108,33 +72,17 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Asset",
+   "no_copy": 1,
    "options": "Asset",
+   "read_only": 1,
    "reqd": 1
-  },
-  {
-   "fieldname": "residual",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Residual"
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "fit_to_fill",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Fit To Fill",
-   "options": "Empty : ready\nNo"
   },
   {
    "allow_on_submit": 1,
    "fieldname": "test_due",
    "fieldtype": "Date",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Test Due",
+   "no_copy": 1,
    "read_only": 1
   },
   {
@@ -179,7 +127,9 @@
    "fieldname": "tare_weight",
    "fieldtype": "Float",
    "label": "Tare Weight",
-   "non_negative": 1
+   "no_copy": 1,
+   "non_negative": 1,
+   "read_only": 1
   },
   {
    "fieldname": "column_break_rdyp",
@@ -198,30 +148,17 @@
    "label": "Container Barcode",
    "no_copy": 1,
    "read_only": 1
-  },
-  {
-   "fetch_from": "asset.item_code",
-   "fieldname": "asset_item",
-   "fieldtype": "Link",
-   "label": "Asset Item",
-   "options": "Item",
-   "read_only": 1
   }
  ],
  "grid_page_length": 50,
+ "in_create": 1,
  "index_web_pages_for_search": 1,
- "is_submittable": 1,
  "links": [
   {
    "group": "Filling",
    "link_doctype": "Container Filling Entry",
    "link_fieldname": "container",
    "table_fieldname": "container_filling_items"
-  },
-  {
-   "group": "Filling",
-   "link_doctype": "Container Ledger Entry",
-   "link_fieldname": "container"
   },
   {
    "group": "Returns",
@@ -236,7 +173,7 @@
    "table_fieldname": "containers_under_test"
   }
  ],
- "modified": "2026-09-04 11:41:59.068729",
+ "modified": "2026-09-11 09:32:49.330823",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Containers",
@@ -244,7 +181,6 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -255,7 +191,29 @@
    "role": "System Manager",
    "select": 1,
    "share": 1,
-   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Asset Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Asset User",
+   "share": 1,
    "write": 1
   }
  ],

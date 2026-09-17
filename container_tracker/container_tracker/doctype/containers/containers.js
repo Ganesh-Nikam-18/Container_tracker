@@ -32,18 +32,18 @@ function render_item_capacities(frm) {
 				<div style="margin-bottom: 15px;">
 					<table class="table table-bordered">
 						<thead>
-							<tr style="background-color: #f8f9fa;">
-								<th style="font-weight: normal; color: #6c757d;">Item</th>
-								<th style="font-weight: normal; color: #6c757d;">Max fill</th>
-								<th style="font-weight: normal; color: #6c757d;">Max extract</th>
-								<th style="font-weight: normal; color: #6c757d;">Heel</th>
+							<tr>
+								<th class="text-muted" style="font-weight: normal;">Item</th>
+								<th class="text-muted" style="font-weight: normal;">Max fill</th>
+								<th class="text-muted" style="font-weight: normal;">Max extract</th>
+								<th class="text-muted" style="font-weight: normal;">Heel</th>
 							</tr>
 						</thead>
 						<tbody>
 				`;
 				
 				matrix.forEach(row => {
-					let heelHtml = row.min_retained ? `<span style="background-color: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 4px; font-size: 12px;">${row.min_retained} ${row.uom || ''}</span>` : '—';
+					let heelHtml = row.min_retained ? `<span class="indicator-pill orange" style="font-size: 12px;">${row.min_retained} ${row.uom || ''}</span>` : '—';
 					html += `
 							<tr>
 								<td style="font-weight: 500;">${row.item}</td>

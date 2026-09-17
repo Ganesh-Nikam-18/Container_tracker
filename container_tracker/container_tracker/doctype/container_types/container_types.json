@@ -8,18 +8,13 @@
  "field_order": [
   "section_break_pyzu",
   "container_type",
-  "default_gas_item",
-  "item_name",
-  "fill_capacity",
-  "capacity_uom",
   "tare_weight",
   "column_break_otpe",
-  "shipping",
-  "hydro_test_interval",
   "security_deposit",
-  "fleet_count",
-  "at_customer",
-  "amended_from",
+  "hydro_test_interval",
+  "column_break_xikl",
+  "fill_capacity",
+  "capacity_uom",
   "section_break_pcfk",
   "item_capacity_matrix"
  ],
@@ -27,16 +22,6 @@
   {
    "fieldname": "section_break_pyzu",
    "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Container Types",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
   },
   {
    "allow_in_quick_entry": 1,
@@ -50,23 +35,6 @@
    "unique": 1
   },
   {
-   "allow_in_quick_entry": 1,
-   "fieldname": "default_gas_item",
-   "fieldtype": "Link",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "label": "Default Gas Item",
-   "options": "Item",
-   "reqd": 1
-  },
-  {
-   "fetch_from": "default_gas_item.item_name",
-   "fieldname": "item_name",
-   "fieldtype": "Data",
-   "label": "Item Name",
-   "read_only": 1
-  },
-  {
    "fieldname": "fill_capacity",
    "fieldtype": "Float",
    "in_filter": 1,
@@ -74,16 +42,6 @@
    "in_standard_filter": 1,
    "label": "Fill Capacity",
    "non_negative": 1,
-   "reqd": 1
-  },
-  {
-   "allow_in_quick_entry": 1,
-   "fieldname": "shipping",
-   "fieldtype": "Select",
-   "in_filter": 1,
-   "in_standard_filter": 1,
-   "label": "Shipping",
-   "options": "Domestic\nTrans-oceanic\nInterstate\nCross-Border\nInternational",
    "reqd": 1
   },
   {
@@ -120,22 +78,6 @@
    "reqd": 1
   },
   {
-   "fieldname": "fleet_count",
-   "fieldtype": "Int",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Fleet Count"
-  },
-  {
-   "fieldname": "at_customer",
-   "fieldtype": "Int",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "At Customer"
-  },
-  {
    "fieldname": "capacity_uom",
    "fieldtype": "Link",
    "label": "Capacity Uom",
@@ -151,12 +93,21 @@
    "fieldtype": "Table",
    "label": "Item Capacity Matrix",
    "options": "Item Capacity Matrix"
+  },
+  {
+   "fieldname": "column_break_xikl",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-08-26 12:23:48.987603",
+ "links": [
+  {
+   "link_doctype": "Containers",
+   "link_fieldname": "type"
+  }
+ ],
+ "modified": "2026-09-11 09:31:07.890442",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Types",
@@ -172,6 +123,18 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Asset Manager",
    "share": 1,
    "write": 1
   }

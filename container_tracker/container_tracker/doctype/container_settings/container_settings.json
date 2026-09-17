@@ -130,7 +130,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-08-24 17:51:07.240195",
+ "modified": "2026-09-11 09:31:27.614526",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Settings",
@@ -143,6 +143,16 @@
    "print": 1,
    "read": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Asset Manager",
    "share": 1,
    "write": 1
   }

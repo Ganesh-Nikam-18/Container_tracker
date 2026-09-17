@@ -12,9 +12,8 @@ class ContainerFillingEntry(Document):
 
 	def process_containers(self):
 		for item in self.container_filling_items:
-			# 1. Update Container Document
 			container_doc = frappe.get_doc("Containers", item.container)
-			container_doc.db_set('status', 'With Customer')
+			container_doc.db_set('status', 'Filled')
 			container_doc.db_set('custodian', self.customer)
 			container_doc.db_set('last_filled', today())
 			
@@ -24,49 +23,54 @@ class ContainerFillingEntry(Document):
 			if item.batch and frappe.db.has_column("Containers", "batch"):
 				container_doc.db_set('batch', item.batch)
 			
-			# 2. Create Container Ledger Entry
+			source_location = None
+			if container_doc.asset:
+				source_location = frappe.db.get_value("Asset", container_doc.asset, "location")
+				
 			cle = frappe.get_doc({
 				"doctype": "Container Ledger Entry",
 				"datetime": now_datetime(),
 				"container": item.container,
-				"filled_qty": item.qty_filled
+				"filled_qty": item.qty_filled,
+				"item_code": self.item,
+				"party": self.customer,
+				"delivery_note": self.delivery_note,
+				"entry_type": "Outward",
+				"from": source_location,
+				"to": self.customer,
+				"reference_document_type": "Container Filling Entry",
+				"reference_document_name": self.name
 			})
-			# Link Asset Movement if container is an Asset
 			if container_doc.asset:
 				cle.asset_movement = self.create_asset_movement(container_doc)
 			
 			cle.insert(ignore_permissions=True)
-			
-			# 3. Add to CLE Items child table
-			self.append("cle_items", {
-				"container_ledger_entry": cle.name,
-				"qty": item.qty_filled,
-				"filled_qty": item.qty_filled
-			})
-		
-		# Save child table updates
-		self.save(ignore_permissions=True)
-		frappe.db.commit()
 
 	def create_asset_movement(self, container_doc):
-		# Create Asset Movement to transfer container from Filling Plant to Finished Goods
-		# Asset Movement target_location is a Link to the Location doctype.
-		target_location = "Finished Goods"
-		
-		# Ensure the Location exists in the system before using it
+		target_location = frappe.db.get_value("Delivery Note", self.delivery_note, "shipping_address_name")
+		if not target_location:
+			target_location = frappe.db.get_value("Delivery Note", self.delivery_note, "customer")
+		if not target_location:
+			frappe.throw(f"Cannot create Asset Movement: No target location found. Please ensure Delivery Note {self.delivery_note} has a Shipping Address or Customer.")
 		if not frappe.db.exists("Location", target_location):
 			loc = frappe.new_doc("Location")
 			loc.location_name = target_location
 			loc.insert(ignore_permissions=True)
 		
-		# For now, let's just log a basic Asset Movement
+		asset_doc = frappe.get_doc("Asset", container_doc.asset)
+		if asset_doc.location == target_location:
+			return None
+
 		am = frappe.new_doc("Asset Movement")
-		am.company = frappe.defaults.get_user_default("Company")
+		am.company = frappe.defaults.get_user_default("Company") or asset_doc.company
 		am.purpose = "Transfer"
 		am.transaction_date = now_datetime()
+		am.reference_doctype = "Container Filling Entry"
+		am.reference_name = self.name
 		
 		am.append("assets", {
 			"asset": container_doc.asset,
+			"source_location": asset_doc.location,
 			"target_location": target_location
 		})
 		
@@ -76,14 +80,17 @@ class ContainerFillingEntry(Document):
 			return am.name
 		except Exception as e:
 			frappe.log_error(message=frappe.get_traceback(), title="Asset Movement Creation Failed in CFE")
+			frappe.msgprint(f"Failed to create Asset Movement for {container_doc.asset}. Checked Error Log for details.", indicator="orange", alert=True)
 			return None
 
 	def create_stock_entry(self):
-		# Create Stock Entry (Material Issue) to consume the bulk gas
 		default_warehouse = frappe.db.get_single_value("Stock Settings", "default_warehouse")
 		if not default_warehouse:
-			# Fallback if no default warehouse is set
 			return
+			
+		batch = None
+		if self.container_filling_items:
+			batch = self.container_filling_items[0].batch
 			
 		se = frappe.get_doc({
 			"doctype": "Stock Entry",
@@ -93,7 +100,8 @@ class ContainerFillingEntry(Document):
 				{
 					"item_code": self.item,
 					"qty": self.quantity_posted,
-					"s_warehouse": default_warehouse
+					"s_warehouse": default_warehouse,
+					"batch_no": batch
 				}
 			]
 		})
@@ -103,6 +111,7 @@ class ContainerFillingEntry(Document):
 			se.submit()
 		except Exception as e:
 			frappe.log_error(message=frappe.get_traceback(), title="Stock Entry Creation Failed in CFE")
+			frappe.msgprint(f"Failed to create Stock Entry for Bulk Gas. Check Error Log for details.", indicator="red", alert=True)
 
 @frappe.whitelist()
 def get_delivery_note_items(delivery_note):

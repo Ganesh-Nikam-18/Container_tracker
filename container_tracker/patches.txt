@@ -4,3 +4,4 @@
 
 [post_model_sync]
 # Patches added in this section will be executed after doctypes are migrated
+container_tracker.patches.set_initial_test_due  #ones more..

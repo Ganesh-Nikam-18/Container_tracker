@@ -1,0 +1,44 @@
+{
+ "chart_name": "Utilisation By Container Type",
+ "chart_type": "Report",
+ "creation": "2026-09-07 12:13:00.082764",
+ "currency": "",
+ "custom_options": "{\n  \"barOptions\": {\n    \"stacked\": 1\n  }\n}",
+ "docstatus": 0,
+ "doctype": "Dashboard Chart",
+ "dynamic_filters_json": "{}",
+ "filters_json": "{\"target_chart\":\"Utilisation\",\"from_date\":\"2026-09-07\",\"to_date\":\"2026-09-13\"}",
+ "group_by_type": "Count",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "modified": "2026-09-07 12:44:34.423863",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "Utilisation By Container Type",
+ "number_of_groups": 0,
+ "owner": "Administrator",
+ "report_name": "Container Utilization & Reconciliation Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "show_values_over_chart": 0,
+ "time_interval": "Yearly",
+ "timeseries": 0,
+ "timespan": "Last Year",
+ "type": "Bar",
+ "use_report_chart": 0,
+ "x_field": "container_type",
+ "y_axis": [
+  {
+   "color": "#449CF0",
+   "y_field": "in_plant"
+  },
+  {
+   "color": "#EC864B",
+   "y_field": "at_customer"
+  }
+ ]
+}
