@@ -9,6 +9,7 @@
   "naming_series",
   "container_barcode",
   "last_filled",
+  "current_location",
   "column_break_rdyp",
   "asset",
   "asset_name",
@@ -148,6 +149,12 @@
    "label": "Container Barcode",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "current_location",
+   "fieldtype": "Link",
+   "label": "Current Location",
+   "options": "Location"
   }
  ],
  "grid_page_length": 50,
@@ -171,9 +178,15 @@
    "link_doctype": "Hydro Test",
    "link_fieldname": "containers",
    "table_fieldname": "containers_under_test"
+  },
+  {
+   "group": "Movements",
+   "link_doctype": "Container Movements",
+   "link_fieldname": "container",
+   "table_fieldname": "container"
   }
  ],
- "modified": "2026-09-11 09:32:49.330823",
+ "modified": "2026-09-18 15:36:31.001681",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Containers",

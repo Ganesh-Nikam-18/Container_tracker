@@ -130,12 +130,12 @@
    "link_fieldname": "reference_document_name"
   },
   {
-   "group": "Asset Movement",
-   "link_doctype": "Asset Movement",
-   "link_fieldname": "reference_name"
+   "group": "Movements",
+   "link_doctype": "Container Movements",
+   "link_fieldname": "reference_document_name"
   }
  ],
- "modified": "2026-09-11 09:33:36.523772",
+ "modified": "2026-09-18 15:37:52.461056",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Filling Entry",

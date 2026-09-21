@@ -15,7 +15,7 @@
   "column_break_ckby",
   "container",
   "entry_type",
-  "asset_movement",
+  "containers_movement",
   "party",
   "customer_name",
   "delivery_note",
@@ -61,13 +61,13 @@
    "read_only": 1
   },
   {
-   "fieldname": "asset_movement",
+   "fieldname": "containers_movement",
    "fieldtype": "Link",
    "in_filter": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Asset Movement",
-   "options": "Asset Movement",
+   "label": "Container Movements",
+   "options": "Container Movements",
    "read_only": 1
   },
   {

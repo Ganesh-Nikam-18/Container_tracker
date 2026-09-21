@@ -1,0 +1,140 @@
+{
+ "actions": [],
+ "autoname": "CNT-MOV-.YYYY.-.#####",
+ "creation": "2026-09-18 14:31:21.790372",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "purpose",
+  "column_break_syll",
+  "transaction_date",
+  "section_break_ckra",
+  "containers",
+  "reference_section",
+  "reference_document_type",
+  "column_break_pbzf",
+  "reference_document_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "purpose",
+   "fieldtype": "Select",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Movement Type",
+   "options": "\nInbound\nOutbound\nInternal Transfer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_syll",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "transaction_date",
+   "fieldtype": "Date",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Transaction Date",
+   "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference"
+  },
+  {
+   "fieldname": "reference_document_type",
+   "fieldtype": "Link",
+   "label": "Reference Document Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_pbzf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reference_document_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Reference Document Name",
+   "options": "reference_document_type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_ckra",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "containers",
+   "fieldtype": "Table",
+   "label": "Containers",
+   "options": "Container Movement Items"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-18 16:13:15.300555",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "Container Movements",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Asset Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Asset User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

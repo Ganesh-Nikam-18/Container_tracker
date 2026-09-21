@@ -23,9 +23,7 @@ class ContainerFillingEntry(Document):
 			if item.batch and frappe.db.has_column("Containers", "batch"):
 				container_doc.db_set('batch', item.batch)
 			
-			source_location = None
-			if container_doc.asset:
-				source_location = frappe.db.get_value("Asset", container_doc.asset, "location")
+			source_location = container_doc.current_location
 				
 			cle = frappe.get_doc({
 				"doctype": "Container Ledger Entry",
@@ -41,47 +39,46 @@ class ContainerFillingEntry(Document):
 				"reference_document_type": "Container Filling Entry",
 				"reference_document_name": self.name
 			})
-			if container_doc.asset:
-				cle.asset_movement = self.create_asset_movement(container_doc)
+			
+			cle.containers_movement = self.create_container_movement(container_doc)
 			
 			cle.insert(ignore_permissions=True)
 
-	def create_asset_movement(self, container_doc):
+	def create_container_movement(self, container_doc):
 		target_location = frappe.db.get_value("Delivery Note", self.delivery_note, "shipping_address_name")
 		if not target_location:
 			target_location = frappe.db.get_value("Delivery Note", self.delivery_note, "customer")
 		if not target_location:
-			frappe.throw(f"Cannot create Asset Movement: No target location found. Please ensure Delivery Note {self.delivery_note} has a Shipping Address or Customer.")
+			frappe.throw(f"Cannot create Container Movement: No target location found. Please ensure Delivery Note {self.delivery_note} has a Shipping Address or Customer.")
 		if not frappe.db.exists("Location", target_location):
 			loc = frappe.new_doc("Location")
 			loc.location_name = target_location
 			loc.insert(ignore_permissions=True)
 		
-		asset_doc = frappe.get_doc("Asset", container_doc.asset)
-		if asset_doc.location == target_location:
+		source_location = container_doc.current_location
+		if source_location == target_location:
 			return None
 
-		am = frappe.new_doc("Asset Movement")
-		am.company = frappe.defaults.get_user_default("Company") or asset_doc.company
-		am.purpose = "Transfer"
-		am.transaction_date = now_datetime()
-		am.reference_doctype = "Container Filling Entry"
-		am.reference_name = self.name
+		cm = frappe.new_doc("Container Movements")
+		cm.company = frappe.defaults.get_user_default("Company") or container_doc.company
+		cm.purpose = "Outbound"
+		cm.transaction_date = now_datetime()
+		cm.reference_document_type = "Container Filling Entry"
+		cm.reference_document_name = self.name
 		
-		am.append("assets", {
-			"asset": container_doc.asset,
-			"source_location": asset_doc.location,
+		cm.append("containers", {
+			"container": container_doc.name,
+			"source_location": source_location,
 			"target_location": target_location
 		})
 		
 		try:
-			am.insert(ignore_permissions=True)
-			am.submit()
-			return am.name
+			cm.insert(ignore_permissions=True)
+			cm.submit()
+			return cm.name
 		except Exception as e:
-			frappe.log_error(message=frappe.get_traceback(), title="Asset Movement Creation Failed in CFE")
-			frappe.msgprint(f"Failed to create Asset Movement for {container_doc.asset}. Checked Error Log for details.", indicator="orange", alert=True)
-			return None
+			frappe.log_error(message=frappe.get_traceback(), title="Container Movement Creation Failed in CFE")
+			frappe.throw(f"Failed to create Container Movement for {container_doc.name}: {str(e)}")
 
 	def create_stock_entry(self):
 		default_warehouse = frappe.db.get_single_value("Stock Settings", "default_warehouse")

@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GasTracker ERP Operations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb; --primary-light: #eff6ff; --primary-dark: #1d4ed8;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
+            --surface-50: #f8fafc; --surface-100: #f1f5f9; --surface-200: #e2e8f0;
+            --surface-300: #cbd5e1; --surface-white: #ffffff;
+            --text-900: #0f172a; --text-700: #334155; --text-500: #64748b;
+            --border-radius: 12px; --border-radius-sm: 8px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --sidebar-bg: #0f172a; --sidebar-text: #94a3b8; --sidebar-active: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--surface-50); color: var(--text-900); display: flex; height: 100vh; overflow: hidden; }
+
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 1.5rem 1rem; flex-shrink: 0; }
+        .brand { font-size: 1.25rem; font-weight: 700; color: white; display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; padding: 0 0.5rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--border-radius-sm); color: var(--sidebar-text); text-decoration: none; font-weight: 500; transition: all 0.2s; margin-bottom: 0.5rem; cursor: pointer; }
+        .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: var(--sidebar-active); }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        .view-section { display: none; flex-direction: column; height: 100%; }
+        .view-section.active { display: flex; animation: fadeIn 0.3s ease; }
+
+        .topbar { background: var(--surface-white); height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; border-bottom: 1px solid var(--surface-200); position: sticky; top: 0; z-index: 10; }
+        .breadcrumb { display: flex; align-items: center; gap: 0.5rem; color: var(--text-500); font-size: 0.875rem; }
+        .breadcrumb span.current { color: var(--text-900); font-weight: 600; }
+        .status-pill { background: var(--primary-light); color: var(--primary-dark); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+
+        .page-content { padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+        h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .subtitle { color: var(--text-500); font-size: 0.875rem; }
+
+        .process-selector { display: flex; background: var(--surface-200); padding: 0.25rem; border-radius: var(--border-radius-sm); margin-bottom: 2rem; width: fit-content; }
+        .process-tab { padding: 0.5rem 1.5rem; border-radius: 6px; font-weight: 500; font-size: 0.875rem; cursor: pointer; color: var(--text-500); transition: all 0.2s; border: none; background: transparent; }
+        .process-tab.active { background: var(--surface-white); color: var(--text-900); box-shadow: var(--shadow-sm); }
+        .process-tab:hover:not(.active) { color: var(--text-900); }
+
+        .card { background: var(--surface-white); border-radius: var(--border-radius); box-shadow: var(--shadow-sm); border: 1px solid var(--surface-200); margin-bottom: 1.5rem; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+        .card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--surface-200); background: var(--surface-50); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card-body { padding: 1.5rem; }
+
+        /* Flow Diagrams */
+        .pipeline-wrapper { display: flex; justify-content: center; align-items: center; padding: 2rem 0; margin-bottom: 1rem; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); border-radius: var(--border-radius); border: 1px dashed var(--surface-300); }
+        .node { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 120px; text-align: center; z-index: 2; }
+        .node-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: var(--surface-white); border: 2px solid var(--surface-300); color: var(--text-500); transition: all 0.3s; }
+        .node.active .node-icon { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 0 0 4px var(--primary-light); }
+        .node-label { font-weight: 600; font-size: 0.875rem; color: var(--text-700); }
+        .connector { flex: 1; height: 2px; background: var(--surface-300); margin: 0 -30px 2rem -30px; position: relative; z-index: 1; transition: all 0.3s; }
+        .connector.active { background: var(--primary); }
+        .connector.active::after { content: ''; position: absolute; right: 0; top: -4px; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid var(--primary); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        label { font-size: 0.875rem; font-weight: 500; color: var(--text-700); }
+        input, select { padding: 0.625rem 0.875rem; border: 1px solid var(--surface-300); border-radius: var(--border-radius-sm); font-size: 0.9375rem; color: var(--text-900); background: var(--surface-white); transition: all 0.2s; width: 100%; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .input-with-icon { position: relative; }
+        .input-with-icon i { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--text-500); }
+        .input-with-icon input { padding-left: 2.5rem; }
+
+        .info-panel { background: var(--surface-50); border-radius: var(--border-radius-sm); padding: 1.25rem; border: 1px solid var(--surface-200); margin-top: 1rem; animation: fadeIn 0.3s ease; }
+        .data-label { color: var(--text-500); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 0.25rem;}
+        .data-value { font-size: 1rem; font-weight: 600; color: var(--text-900); display: flex; align-items: center; gap: 0.5rem; }
+        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: var(--surface-200); color: var(--text-700); }
+        .badge.green { background: #dcfce7; color: #166534; }
+        .badge.orange { background: #fef3c7; color: #92400e; }
+        .badge.blue { background: #dbeafe; color: #1e40af; }
+        .badge.purple { background: #ede9fe; color: #5b21b6; }
+        .badge.red { background: #fee2e2; color: #991b1b; }
+
+        .progress-wrapper { margin-top: 1rem; }
+        .progress-header { display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500; }
+        .progress-bar { height: 8px; background: var(--surface-200); border-radius: 99px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .table-wrapper { overflow-x: auto; border: 1px solid var(--surface-200); border-radius: var(--border-radius-sm); margin-top: 1rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem; text-align: left; font-size: 0.875rem; border-bottom: 1px solid var(--surface-200); }
+        th { background: var(--surface-50); font-weight: 600; color: var(--text-500); text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; }
+
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: var(--border-radius-sm); font-weight: 500; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; border: none; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 1px 2px rgba(37, 99, 235, 0.3); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-secondary { background: white; color: var(--text-700); border: 1px solid var(--surface-300); }
+        .btn-secondary:hover { background: var(--surface-50); border-color: var(--text-500); }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger-ghost { background: transparent; color: var(--danger); padding: 0.5rem; }
+        .btn-danger-ghost:hover { background: #fee2e2; }
+
+        /* Switches / Toggles */
+        .toggle-group { display: flex; border: 1px solid var(--surface-300); border-radius: var(--border-radius-sm); overflow: hidden; width: fit-content; }
+        .toggle-btn { padding: 0.625rem 1.25rem; background: var(--surface-white); border: none; cursor: pointer; font-size: 0.875rem; font-weight: 500; color: var(--text-700); transition: all 0.2s; }
+        .toggle-btn.active { background: var(--primary); color: white; }
+        .toggle-btn:first-child { border-right: 1px solid var(--surface-300); }
+        .toggle-btn.active:first-child { border-right-color: var(--primary); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal { background: white; width: 100%; max-width: 600px; border-radius: var(--border-radius); box-shadow: var(--shadow-lg); transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-overlay.active .modal { transform: translateY(0); }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--surface-200); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 1.5rem; overflow-y: auto; }
+        .search-item { padding: 1rem; border: 1px solid var(--surface-200); border-radius: var(--border-radius-sm); margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .search-item:hover { border-color: var(--primary); background: var(--primary-light); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="ri-flask-fill" style="color: #60a5fa; font-size: 1.5rem;"></i>
+            GasTracker ERP
+        </div>
+        <nav>
+            <a class="nav-item" onclick="switchMainView('dashboard')"><i class="ri-dashboard-line"></i> Dashboard</a>
+            <a class="nav-item active" id="nav-inbound" onclick="switchMainView('inbound')"><i class="ri-inbox-archive-line"></i> Inbound Receiving</a>
+            <a class="nav-item" id="nav-filling" onclick="switchMainView('filling')"><i class="ri-water-flash-line"></i> Filling & Repack</a>
+            <a class="nav-item" onclick="switchMainView('containers')"><i class="ri-database-2-line"></i> Container Ledger</a>
+            <a class="nav-item" id="nav-movement" onclick="switchMainView('movement')"><i class="ri-truck-line"></i> Container Movement</a>
+        </nav>
+        
+        <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">A</div>
+                <div>
+                    <div style="font-size: 0.875rem; font-weight: 500; color: white;">Administrator</div>
+                    <div style="font-size: 0.75rem; color: var(--text-500);">System Manager</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ============================================== -->
+    <!-- VIEW: INBOUND RECEIVING (PO LOGISTICS)         -->
+    <!-- ============================================== -->
+    <main class="main-content view-section active" id="view-inbound">
+        <header class="topbar">
+            <div class="breadcrumb">
+                <i class="ri-home-line"></i> <span>/</span>
+                <span>Procurement</span> <span>/</span>
+                <span class="current">Inbound Receipt & Logistics</span>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-secondary">Save Draft</button>
+                <button class="btn btn-primary" id="btn-submit-inbound" disabled onclick="submitInbound()"><i class="ri-check-double-line"></i> Create Purchase Receipt</button>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="page-header">
+                <div>
+                    <h1>Inbound Logistics & Receipt</h1>
+                    <p class="subtitle">Process Purchase Orders and manage incoming container logistics.</p>
+                </div>
+            </div>
+
+            <!-- Pipeline -->
+            <div class="pipeline-wrapper">
+                <div class="node active" id="ib-node-po">
+                    <div class="node-icon"><i class="ri-file-list-3-line"></i></div>
+                    <div class="node-label">Purchase Order</div>
+                </div>
+                <div class="connector" id="ib-conn1"></div>
+                <div class="node" id="ib-node-logistics">
+                    <div class="node-icon"><i class="ri-truck-line"></i></div>
+                    <div class="node-label">Container Logistics</div>
+                </div>
+                <div class="connector" id="ib-conn2"></div>
+                <div class="node" id="ib-node-receipt">
+                    <div class="node-icon"><i class="ri-inbox-archive-line"></i></div>
+                    <div class="node-label">Receive to Stock</div>
+                </div>
+            </div>
+
+            <!-- Step 1: PO -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="ri-file-text-line" style="color: var(--purple);"></i> 1. Select Purchase Order</div>
+                </div>
+                <div class="card-body">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Purchase Order Number</label>
+                            <div class="input-with-icon" onclick="openModalIB('po')" style="cursor: pointer;">
+                                <i class="ri-search-line"></i>
+                                <input type="text" id="ib-po-input" placeholder="Search POs..." readonly style="cursor: pointer; background: var(--surface-50);">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="ib-po-info" class="info-panel" style="display: none;">
+                        <div class="grid-3">
+                            <div><div class="data-label">Supplier</div><div class="data-value" id="ib-po-supplier">-</div></div>
+                            <div><div class="data-label">Item Ordered</div><div class="data-value" id="ib-po-item">-</div></div>
+                            <div><div class="data-label">Expected Qty</div><div class="data-value"><span id="ib-po-qty" style="color: var(--primary);">0</span> Kg</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Container Logistics -->
+            <div class="card" id="ib-card-logistics" style="opacity: 0.5; pointer-events: none;">
+                <div class="card-header">
+                    <div class="card-title"><i class="ri-truck-line" style="color: var(--warning);"></i> 2. Container Logistics</div>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" id="tg-supplier" onclick="toggleContainerType('supplier')">Supplier's Container</button>
+                        <button class="toggle-btn" id="tg-owned" onclick="toggleContainerType('owned')">Send Our Container</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Supplier Container Flow -->
+                    <div id="ib-flow-supplier">
+                        <div class="info-panel" style="background: #fffbeb; border-color: #fde68a; margin-top: 0; margin-bottom: 1.5rem;">
+                            <i class="ri-information-line" style="color: var(--warning); margin-right: 0.5rem;"></i>
+                            Supplier is delivering gas using their own container. We must log their container ID to track return deadlines and penalties.
+                        </div>
+                        <div class="grid-3">
+                            <div class="form-group">
+                                <label>Incoming Container ID (Supplier Tag)</label>
+                                <input type="text" id="ib-supp-id" placeholder="e.g. SUPP-ISO-8899" oninput="checkIbUnlock()">
+                            </div>
+                            <div class="form-group">
+                                <label>Return Deadline (Days)</label>
+                                <input type="number" id="ib-supp-days" value="14">
+                            </div>
+                            <div class="form-group">
+                                <label>Late Penalty (/Day)</label>
+                                <input type="number" id="ib-supp-pen" value="500" placeholder="₹ Amount">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Owned Container Flow -->
+                    <div id="ib-flow-owned" style="display: none;">
+                        <div class="info-panel" style="background: #eff6ff; border-color: #bfdbfe; margin-top: 0; margin-bottom: 1.5rem;">
+                            <i class="ri-information-line" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                            We must dispatch our empty asset to the supplier for filling. Select an empty container to create a Container Movement.
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Select Our Empty Asset to Send</label>
+                                <div class="input-with-icon" onclick="openModalIB('asset')" style="cursor: pointer;">
+                                    <i class="ri-search-line"></i>
+                                    <input type="text" id="ib-asset-input" placeholder="Select Empty Tank..." readonly style="cursor: pointer; background: var(--surface-50);">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Selected Asset Details -->
+                        <div id="ib-asset-details" style="display: none; margin-top: 1rem; padding: 1rem; border: 1px solid var(--surface-200); border-radius: var(--border-radius-sm);">
+                            <div class="grid-3">
+                                <div><div class="data-label">Asset Tag</div><div class="data-value" id="ib-asset-tag">-</div></div>
+                                <div><div class="data-label">Capacity</div><div class="data-value"><span id="ib-asset-cap">0</span> Kg</div></div>
+                                <div>
+                                    <button class="btn btn-warning" id="btn-dispatch" onclick="dispatchAsset()">
+                                        <i class="ri-flight-takeoff-line"></i> Dispatch to Supplier
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="dispatch-status" style="display: none; margin-top: 1rem; color: var(--success); font-weight: 600;">
+                                <i class="ri-checkbox-circle-fill"></i> Asset Move Checklist Completed. Container Dispatched! 
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Step 3: Receive Details -->
+            <div class="card" id="ib-card-receive" style="opacity: 0.5; pointer-events: none; filter: grayscale(1);">
+                <div class="card-header">
+                    <div class="card-title"><i class="ri-inbox-archive-line" style="color: var(--success);"></i> 3. Receiving Details</div>
+                </div>
+                <div class="card-body">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Actual Received Quantity (Kg)</label>
+                            <input type="number" id="ib-actual-qty" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Target Warehouse / Location</label>
+                            <select>
+                                <option>Main Gas Yard - Location A</option>
+                                <option>Quarantine / QC Hold</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- VIEW: FILLING & REPACK                         -->
+    <!-- ============================================== -->
+    <main class="main-content view-section" id="view-filling">
+        <header class="topbar">
+            <div class="breadcrumb">
+                <i class="ri-home-line"></i> <span>/</span>
+                <span>Container Tracker</span> <span>/</span>
+                <span class="current">Gas Transfer Entry</span>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-secondary">Save Draft</button>
+                <button class="btn btn-primary" id="btn-submit-filling" disabled style="opacity: 0.5;" onclick="submitFilling()"><i class="ri-check-double-line"></i> Submit Transfer</button>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="page-header">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <h1>Gas Transfer Entry (Filling)</h1>
+                        <span class="status-pill">Draft</span>
+                    </div>
+                    <p class="subtitle">Extract from Source Containers, run QC, and fill Targets.</p>
+                </div>
+                <div style="text-align: right;">
+                    <div class="data-label">Posting Date</div>
+                    <div class="data-value" style="font-size: 0.875rem;"><i class="ri-calendar-line"></i> 17-Sep-2026 16:30</div>
+                </div>
+            </div>
+
+            <!-- Process Selector -->
+            <div class="process-selector">
+                <button class="process-tab active" onclick="switchProcessFill('inbound')" id="tab-inbound-fill">
+                    <i class="ri-download-line"></i> Inbound Repack
+                </button>
+                <button class="process-tab" onclick="switchProcessFill('outbound')" id="tab-outbound-fill">
+                    <i class="ri-upload-line"></i> Outbound (Sales Filling)
+                </button>
+                <button class="process-tab" onclick="switchProcessFill('internal')" id="tab-internal-fill">
+                    <i class="ri-refresh-line"></i> Internal Repack
+                </button>
+            </div>
+
+            <!-- Visual Pipeline -->
+            <div class="pipeline-wrapper">
+                <div class="node active" id="fill-node-po">
+                    <div class="node-icon"><i class="ri-file-text-fill"></i></div>
+                    <div class="node-label" id="fill-label-ref">Reference Order</div>
+                </div>
+                <div class="connector" id="fill-conn0"></div>
+                <div class="node" id="fill-node-src">
+                    <div class="node-icon"><i class="ri-database-2-fill"></i></div>
+                    <div class="node-label" id="fill-label-src">Source Container</div>
+                </div>
+                <div class="connector" id="fill-conn1"></div>
+                <div class="node" id="fill-node-qc">
+                    <div class="node-icon"><i class="ri-test-tube-fill"></i></div>
+                    <div class="node-label">QC Confirm</div>
+                </div>
+                <div class="connector" id="fill-conn2"></div>
+                <div class="node" id="fill-node-target">
+                    <div class="node-icon"><i class="ri-grid-fill"></i></div>
+                    <div class="node-label" id="fill-label-target">Target Filled</div>
+                </div>
+            </div>
+
+            <!-- 1. REFERENCE DOCUMENT -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title" id="fill-title-ref"><i class="ri-file-list-3-line" style="color: var(--purple);"></i> 1. Reference Document</div>
+                </div>
+                <div class="card-body">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Document Type</label>
+                            <select id="fill-doc-type">
+                                <option value="Purchase Order" class="opt-inbound-fill">Purchase Order</option>
+                                <option value="Purchase Receipt" class="opt-inbound-fill">Purchase Receipt</option>
+                                <option value="Sales Order" class="opt-outbound-fill" style="display:none;">Sales Order</option>
+                                <option value="Delivery Note" class="opt-outbound-fill" style="display:none;">Delivery Note</option>
+                                <option value="Material Transfer" class="opt-internal-fill" style="display:none;">Material Transfer</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Reference Number</label>
+                            <div class="input-with-icon" onclick="openModalFill('ref')" style="cursor: pointer;">
+                                <i class="ri-search-line"></i>
+                                <input type="text" id="fill-ref-input" placeholder="Search for Document..." readonly style="cursor: pointer; background: var(--surface-50);">
+                            </div>
+                        </div>
+                    </div>
+                    <div id="fill-ref-info-panel" class="info-panel" style="display: none; background: #faf5ff; border-color: #e9d5ff;">
+                        <div class="grid-3">
+                            <div><div class="data-label">Item Needed</div><div class="data-value" id="fill-ref-item-name">-</div></div>
+                            <div><div class="data-label">Required Quantity</div><div class="data-value"><span id="fill-ref-qty" style="color: var(--purple);">0</span> Kg</div></div>
+                            <div><div class="data-label" id="fill-ref-party-label">Party</div><div class="data-value" id="fill-ref-party">-</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. SOURCE CONTAINER -->
+            <div class="card" id="fill-card-src" style="opacity: 0.6; pointer-events: none;">
+                <div class="card-header">
+                    <div class="card-title" id="fill-title-src"><i class="ri-download-2-line" style="color: var(--primary);"></i> 2. Source Container (Extraction)</div>
+                </div>
+                <div class="card-body">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Source Container ID</label>
+                            <div class="input-with-icon" onclick="openModalFill('source')" style="cursor: pointer;">
+                                <i class="ri-search-line"></i>
+                                <input type="text" id="fill-src-input" placeholder="Select tank..." readonly style="cursor: pointer; background: var(--surface-50);">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Container Status</label>
+                            <input type="text" id="fill-src-status" placeholder="-" disabled>
+                        </div>
+                    </div>
+                    <div id="fill-src-info-panel" class="info-panel" style="display: none;">
+                        <div class="grid-4">
+                            <div><div class="data-label">Current Contents</div><div class="data-value" id="fill-src-item-name">-</div></div>
+                            <div>
+                                <div class="data-label">Original Grade & State</div>
+                                <div class="data-value"><span class="badge blue" id="fill-src-grade">-</span><span class="badge orange" id="fill-src-state">-</span></div>
+                            </div>
+                            <div><div class="data-label">Asset Tag</div><div class="data-value" id="fill-src-asset" style="font-size: 0.875rem;">-</div></div>
+                            <div><div class="data-label">Available Qty</div><div class="data-value"><span style="color: var(--primary);" id="fill-src-qty">0</span> Kg</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. QC -->
+            <div class="card" id="fill-card-qc" style="opacity: 0.6; pointer-events: none;">
+                <div class="card-header" style="background: #fffbeb; border-color: #fde68a;">
+                    <div class="card-title"><i class="ri-test-tube-line" style="color: var(--warning);"></i> 3. QC Grading & Repack Ops</div>
+                    <span style="font-size: 0.75rem; color: var(--text-700);">Must be completed before Target Allocation</span>
+                </div>
+                <div class="card-body" id="fill-qc-body">
+                    <div class="grid-3" style="margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label>Resultant Item Master</label>
+                            <select id="fill-out-item">
+                                <option value="">- Wait for Source -</option>
+                                <option value="ITEM-ARG-A">Argon - Grade A</option>
+                                <option value="ITEM-ARG-B">Argon - Grade B</option>
+                                <option value="ITEM-NIT-HP">Nitrogen - High Purity</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Resultant Grade</label>
+                            <select id="fill-out-grade">
+                                <option value="Grade A">Grade A</option>
+                                <option value="Grade B">Grade B</option>
+                                <option value="Poor Quality">Poor Quality</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Resultant State</label>
+                            <select id="fill-out-state">
+                                <option value="Liquid">Liquid</option>
+                                <option value="Gas">Gas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; padding-top: 1rem; border-top: 1px dashed var(--surface-200);">
+                        <span style="font-size: 0.875rem; color: var(--text-500);" id="fill-qc-status-text">QC Pending...</span>
+                        <button class="btn btn-warning" id="fill-btn-confirm-qc" onclick="confirmQCFill()">
+                            <i class="ri-check-line"></i> Confirm QC & Unlock Target Allocation
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. TARGET CONTAINERS -->
+            <div class="card" id="fill-card-target" style="opacity: 0.6; pointer-events: none; filter: grayscale(1);">
+                <div class="card-header">
+                    <div class="card-title"><i class="ri-upload-2-line" style="color: var(--success);"></i> 4. Target Allocation (Where gas is going to store)</div>
+                    <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="openModalFill('target')">
+                        <i class="ri-add-line"></i> Add Target Container
+                    </button>
+                </div>
+                
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Target Container</th>
+                                <th style="width: 20%;">Type / Asset</th>
+                                <th style="width: 15%;">Destination Type</th>
+                                <th style="width: 20%;">Fill Amount (Kg)</th>
+                                <th style="width: 15%;">Remaining Cap.</th>
+                                <th style="width: 10%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="fill-target-tbody">
+                            <tr id="fill-empty-state">
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-500);">
+                                    <i class="ri-lock-line" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                    Waiting for QC Confirmation...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="card-body" style="background: var(--surface-50); border-top: 1px solid var(--surface-200); padding: 1rem 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="data-label" style="margin: 0;">Total Allocated</span>
+                        <div style="font-size: 1.25rem; font-weight: 700;">
+                            <span id="fill-total-allocated" style="color: var(--primary);">0</span> 
+                            <span style="color: var(--text-500); font-size: 0.875rem;">/ <span id="fill-total-available">0</span> Kg Available</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar" style="margin-top: 0.5rem;">
+                        <div class="progress-fill" id="fill-allocation-bar" style="width: 0%; background: var(--success);"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- VIEW: CONTAINER MOVEMENT                       -->
+    <!-- ============================================== -->
+    <main class="main-content view-section" id="view-movement">
+        <header class="topbar">
+            <div class="breadcrumb">
+                <i class="ri-home-line"></i> <span>/</span>
+                <span>Container Tracker</span> <span>/</span>
+                <span class="current">Container Movement</span>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-secondary">Save Draft</button>
+                <button class="btn btn-primary" id="btn-submit-movement" disabled onclick="submitMovement()"><i class="ri-check-double-line"></i> Submit Movement</button>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="page-header">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <h1>Container Movement</h1>
+                        <span class="status-pill">Draft</span>
+                    </div>
+                    <p class="subtitle">Process Inbound, Outbound, or Internal Transfers.</p>
+                </div>
+            </div>
+
+            <!-- Process Selector -->
+            <div class="process-selector">
+                <button class="process-tab active" onclick="switchMovementTab('inbound')" id="tab-move-inbound">
+                    <i class="ri-download-line"></i> Inbound
+                </button>
+                <button class="process-tab" onclick="switchMovementTab('outbound')" id="tab-move-outbound">
+                    <i class="ri-upload-line"></i> Outbound
+                </button>
+                <button class="process-tab" onclick="switchMovementTab('internal')" id="tab-move-internal">
+                    <i class="ri-refresh-line"></i> Internal Transfer
+                </button>
+            </div>
+
+            <!-- Reference Details -->
+            <div class="card" id="move-card-ref">
+                <div class="card-header">
+                    <div class="card-title" id="move-title-ref"><i class="ri-file-list-3-line" style="color: var(--purple);"></i> Reference Document</div>
+                </div>
+                <div class="card-body">
+                    <div class="grid-2">
+                        <div class="form-group" id="move-ref-group">
+                            <label id="move-label-ref">Purchase Order Number</label>
+                            <div class="input-with-icon" onclick="openModalMove('ref')" style="cursor: pointer;">
+                                <i class="ri-search-line"></i>
+                                <input type="text" id="move-ref-input" placeholder="Select Document..." readonly style="cursor: pointer; background: var(--surface-50);">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Movement Date</label>
+                            <input type="date" id="move-date" value="2026-09-18">
+                        </div>
+                    </div>
+                    <div id="move-ref-info-panel" class="info-panel" style="display: none; background: #faf5ff; border-color: #e9d5ff;">
+                        <div class="grid-3">
+                            <div><div class="data-label">Item Needed</div><div class="data-value" id="move-ref-item-name">-</div></div>
+                            <div><div class="data-label">Required Quantity</div><div class="data-value"><span id="move-ref-qty" style="color: var(--purple);">0</span> Kg</div></div>
+                            <div><div class="data-label" id="move-ref-party-label">Supplier</div><div class="data-value" id="move-ref-party">-</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Details -->
+            <div class="card" id="move-card-loc">
+                <div class="card-header">
+                    <div class="card-title"><i class="ri-map-pin-line" style="color: var(--warning);"></i> Movement Locations</div>
+                </div>
+                <div class="card-body">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>From Location</label>
+                            <select id="move-from-loc">
+                                <option value="">Select From Location...</option>
+                                <option value="Supplier Location">Supplier Location</option>
+                                <option value="Main Gas Yard - Location A">Main Gas Yard - Location A</option>
+                                <option value="Customer Location">Customer Location</option>
+                                <option value="Quarantine / QC Hold">Quarantine / QC Hold</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>To Location</label>
+                            <select id="move-to-loc">
+                                <option value="">Select To Location...</option>
+                                <option value="Main Gas Yard - Location A">Main Gas Yard - Location A</option>
+                                <option value="Customer Location">Customer Location</option>
+                                <option value="Quarantine / QC Hold">Quarantine / QC Hold</option>
+                                <option value="Supplier Location">Supplier Location</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Containers -->
+            <div class="card" id="move-card-containers">
+                <div class="card-header">
+                    <div class="card-title"><i class="ri-database-2-line" style="color: var(--success);"></i> Select Containers</div>
+                    <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="openModalMove('container')">
+                        <i class="ri-add-line"></i> Add Container
+                    </button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Container Tag</th>
+                                <th style="width: 20%;">Type</th>
+                                <th style="width: 20%;">Ownership</th>
+                                <th style="width: 15%;">Current Status</th>
+                                <th style="width: 15%;">Available Qty</th>
+                                <th style="width: 10%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="move-container-tbody">
+                            <tr id="move-empty-state">
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-500);">
+                                    <i class="ri-inbox-line" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                    No containers selected. Click 'Add Container' to start.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Search Modal -->
+    <div class="modal-overlay" id="search-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 style="font-size: 1rem; font-weight: 600;" id="modal-title">Select...</h3>
+                <i class="ri-close-line" style="cursor: pointer; font-size: 1.25rem;" onclick="closeModal()"></i>
+            </div>
+            <div class="modal-body">
+                <div class="input-with-icon" style="margin-bottom: 1rem;">
+                    <i class="ri-search-line"></i>
+                    <input type="text" placeholder="Type to search...">
+                </div>
+                <div id="modal-list" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- NAVIGATION ---
+        function switchMainView(viewId) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-' + viewId).classList.add('active');
+            
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+        }
+
+        // --- MOCK DATABASE ---
+        const db = {
+            pos: {
+                "PO-2026-LPG": { id: "PO-2026-LPG", item: "LPG Gas", qty: 15000, party: "Bharat Gas" },
+                "PO-2026-ARG": { id: "PO-2026-ARG", item: "Argon Liquid", qty: 25000, party: "Global Gas" }
+            },
+            sos: {
+                "SO-2026-899": { id: "SO-2026-899", item: "Argon - Grade A", qty: 300, party: "Acme Manufacturing" },
+                "DN-2026-555": { id: "DN-2026-555", item: "Nitrogen - High Purity", qty: 150, party: "BioTech Labs" }
+            },
+            empty_assets: {
+                "AST-ISO-801": { id: "AST-ISO-801", type: "ISO Tank", cap: 20000, status: "Available", allowed_item: "Argon Liquid" },
+                "AST-ISO-802": { id: "AST-ISO-802", type: "ISO Tank", cap: 15000, status: "Available", allowed_item: "LPG Gas" },
+                "AST-CYL-500": { id: "AST-CYL-500", type: "Jumbo Cylinder", cap: 1000, status: "Available", allowed_item: "LPG Gas" }
+            },
+            containers: {
+                // Large Source Tanks
+                "ISO-2026-X1": { id: "ISO-2026-X1", type: "ISO Tank", asset: "Supplier Owned", item: "Argon - Grade A", grade: "Grade A", state: "Liquid", qty: 25000, cap: 25000, status: "Inbound Received" },
+                "CYL-10045": { id: "CYL-10045", type: "Cylinder 500L", asset: "AST-CYL-909", item: "Nitrogen - High Purity", grade: "High Purity", state: "Gas", qty: 250, cap: 300, status: "In Stock" },
+                // Empty Targets
+                "CYL-90001": { id: "CYL-90001", type: "Cylinder 50L", asset: "AST-CYL-111", item: "Empty", grade: "-", state: "-", qty: 0, cap: 300, status: "Available" },
+                "CUST-TK-01": { id: "CUST-TK-01", type: "Customer Cylinder", asset: "N/A (Customer)", item: "Empty", grade: "-", state: "-", qty: 0, cap: 150, status: "Customer Owned" }
+            }
+        };
+
+        // --- COMMON MODAL ---
+        let currentModalContext = ''; // 'ib' or 'fill'
+        let currentModalMode = '';
+
+        function closeModal() { document.getElementById('search-modal').classList.remove('active'); }
+
+        // ==============================================
+        // INBOUND RECEIVING LOGIC
+        // ==============================================
+        let ib_poData = null;
+        let ib_assetData = null;
+        let ib_containerType = 'supplier';
+        let ib_dispatched = false;
+
+        function openModalIB(mode) {
+            currentModalContext = 'ib';
+            currentModalMode = mode;
+            const list = document.getElementById('modal-list');
+            list.innerHTML = "";
+            
+            if(mode === 'po') {
+                document.getElementById('modal-title').innerText = "Select Purchase Order";
+                Object.values(db.pos).forEach(po => {
+                    list.innerHTML += `
+                        <div class="search-item" onclick="selectItem('${po.id}')">
+                            <div><b>${po.id}</b><br><small>${po.party} &bull; ${po.item} &bull; ${po.qty}Kg</small></div>
+                            <i class="ri-arrow-right-line" style="color: var(--primary);"></i>
+                        </div>`;
+                });
+            } else if (mode === 'asset') {
+                document.getElementById('modal-title').innerText = "Select Empty Asset to Send";
+                Object.values(db.empty_assets).forEach(ast => {
+                    list.innerHTML += `
+                        <div class="search-item" onclick="selectItem('${ast.id}')">
+                            <div><b>${ast.id}</b><br><small>Type: ${ast.type} &bull; Cap: ${ast.cap}Kg &bull; Compatible: ${ast.allowed_item}</small></div>
+                            <i class="ri-arrow-right-line" style="color: var(--primary);"></i>
+                        </div>`;
+                });
+            }
+            document.getElementById('search-modal').classList.add('active');
+        }
+
+        function toggleContainerType(type) {
+            ib_containerType = type;
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tg-' + type).classList.add('active');
+            
+            if(type === 'supplier') {
+                document.getElementById('ib-flow-supplier').style.display = 'block';
+                document.getElementById('ib-flow-owned').style.display = 'none';
+            } else {
+                document.getElementById('ib-flow-supplier').style.display = 'none';
+                document.getElementById('ib-flow-owned').style.display = 'block';
+            }
+            checkIbUnlock();
+        }
+
+        function dispatchAsset() {
+            const btn = document.getElementById('btn-dispatch');
+            btn.innerHTML = `<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Processing...`;
+            setTimeout(() => {
+                ib_dispatched = true;
+                btn.style.display = 'none';
+                document.getElementById('dispatch-status').style.display = 'block';
+                checkIbUnlock();
+            }, 1000);
+        }
+
+        function checkIbUnlock() {
+            let ready = false;
+            if(ib_poData) {
+                if(ib_containerType === 'supplier' && document.getElementById('ib-supp-id').value.trim() !== '') ready = true;
+                else if(ib_containerType === 'owned' && ib_dispatched) ready = true;
+            }
+
+            if(ready) {
+                document.getElementById('ib-card-receive').style.opacity = "1";
+                document.getElementById('ib-card-receive').style.pointerEvents = "all";
+                document.getElementById('ib-card-receive').style.filter = "none";
+                document.getElementById('btn-submit-inbound').disabled = false;
+                document.getElementById('ib-conn2').classList.add('active');
+                document.getElementById('ib-node-receipt').classList.add('active');
+            } else {
+                document.getElementById('ib-card-receive').style.opacity = "0.5";
+                document.getElementById('ib-card-receive').style.pointerEvents = "none";
+                document.getElementById('ib-card-receive').style.filter = "grayscale(1)";
+                document.getElementById('btn-submit-inbound').disabled = true;
+                document.getElementById('ib-conn2').classList.remove('active');
+                document.getElementById('ib-node-receipt').classList.remove('active');
+            }
+        }
+
+        function submitInbound() {
+            alert(`Success! Purchase Receipt Created & Stock Entry Generated.`);
+        }
+
+        // ==============================================
+        // FILLING LOGIC
+        // ==============================================
+        let fill_activeProcess = 'inbound';
+        let fill_refData = null;
+        let fill_sourceData = null;
+        let fill_qcConfirmed = false;
+        let fill_targetRows = [];
+
+        function switchProcessFill(process) {
+            fill_activeProcess = process;
+            
+            document.querySelectorAll('#view-filling .process-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${process}-fill`).classList.add('active');
+
+            document.querySelectorAll('#fill-doc-type option').forEach(opt => opt.style.display = 'none');
+            document.querySelectorAll(`.opt-${process}-fill`).forEach(opt => opt.style.display = 'block');
+            document.getElementById('fill-doc-type').value = document.querySelector(`.opt-${process}-fill`).value;
+
+            if (process === 'inbound') {
+                document.getElementById('fill-label-ref').innerText = "Purchase Order";
+                document.getElementById('fill-label-src').innerText = "Inbound Tank";
+                document.getElementById('fill-ref-party-label').innerText = "Supplier";
+            } else if (process === 'outbound') {
+                document.getElementById('fill-label-ref').innerText = "Sales Order";
+                document.getElementById('fill-label-src').innerText = "Stock Tank";
+                document.getElementById('fill-ref-party-label').innerText = "Customer";
+            } else {
+                document.getElementById('fill-label-ref').innerText = "Internal Transfer";
+                document.getElementById('fill-label-src').innerText = "Source Tank";
+                document.getElementById('fill-ref-party-label').innerText = "Department";
+            }
+            resetFormFill();
+        }
+
+        function resetFormFill() {
+            fill_refData = null; fill_sourceData = null; fill_qcConfirmed = false; fill_targetRows = [];
+            document.getElementById('fill-ref-input').value = ""; document.getElementById('fill-ref-info-panel').style.display = 'none';
+            document.getElementById('fill-src-input').value = ""; document.getElementById('fill-src-info-panel').style.display = 'none';
+            document.getElementById('fill-card-src').style.opacity = "0.6"; document.getElementById('fill-card-src').style.pointerEvents = "none";
+            document.getElementById('fill-card-qc').style.opacity = "0.6"; document.getElementById('fill-card-qc').style.pointerEvents = "none";
+            
+            const btn = document.getElementById('fill-btn-confirm-qc');
+            btn.className = "btn btn-warning"; btn.innerHTML = `<i class="ri-check-line"></i> Confirm QC`;
+            document.getElementById('fill-qc-status-text').innerText = "QC Pending...";
+            document.getElementById('fill-qc-body').style.pointerEvents = "all";
+            
+            document.getElementById('fill-card-target').style.opacity = "0.6"; document.getElementById('fill-card-target').style.pointerEvents = "none";
+            document.getElementById('fill-card-target').style.filter = "grayscale(1)";
+            document.getElementById('btn-submit-filling').disabled = true; document.getElementById('btn-submit-filling').style.opacity = "0.5";
+            document.getElementById('fill-conn0').classList.remove('active'); document.getElementById('fill-node-src').classList.remove('active');
+            document.getElementById('fill-conn1').classList.remove('active'); document.getElementById('fill-node-qc').classList.remove('active');
+            document.getElementById('fill-conn2').classList.remove('active'); document.getElementById('fill-node-target').classList.remove('active');
+            renderTargetsFill();
+        }
+
+        function openModalFill(mode) {
+            currentModalContext = 'fill';
+            currentModalMode = mode;
+            const list = document.getElementById('modal-list');
+            list.innerHTML = "";
+            document.getElementById('modal-title').innerText = "Select " + mode;
+            
+            if (mode === 'ref') {
+                const dataStore = fill_activeProcess === 'inbound' ? db.pos : db.sos;
+                Object.values(dataStore).forEach(doc => {
+                    list.innerHTML += `<div class="search-item" onclick="selectItem('${doc.id}')"><div><b>${doc.id}</b><br><small>${doc.party}</small></div><i class="ri-arrow-right-line" style="color: var(--primary);"></i></div>`;
+                });
+            } else {
+                Object.values(db.containers).forEach(c => {
+                    if (mode === 'source' && c.qty === 0) return;
+                    if (mode === 'target' && c.qty >= c.cap) return;
+                    list.innerHTML += `<div class="search-item" onclick="selectItem('${c.id}')"><div><b>${c.id}</b><br><small>${c.type} / Available: ${c.cap - c.qty}Kg free</small></div><i class="ri-arrow-right-line" style="color: var(--primary);"></i></div>`;
+                });
+            }
+            document.getElementById('search-modal').classList.add('active');
+        }
+
+        function confirmQCFill() {
+            if(!fill_sourceData) return alert("Select Source Container first");
+            fill_qcConfirmed = true;
+            const btn = document.getElementById('fill-btn-confirm-qc');
+            btn.className = "btn btn-success"; btn.innerHTML = `<i class="ri-checkbox-circle-fill"></i> QC Confirmed`;
+            document.getElementById('fill-qc-status-text').innerText = "Locked.";
+            document.getElementById('fill-qc-body').style.pointerEvents = "none";
+            btn.style.pointerEvents = "all";
+            
+            document.getElementById('fill-conn2').classList.add('active');
+            document.getElementById('fill-node-target').classList.add('active');
+            document.getElementById('fill-card-target').style.opacity = "1";
+            document.getElementById('fill-card-target').style.pointerEvents = "all";
+            document.getElementById('fill-card-target').style.filter = "none";
+            document.getElementById('btn-submit-filling').disabled = false;
+            document.getElementById('btn-submit-filling').style.opacity = "1";
+            renderTargetsFill();
+        }
+
+        function addTargetFill(data) {
+            if(!fill_qcConfirmed) return alert("Confirm QC first!");
+            if(fill_targetRows.find(r => r.id === data.id)) return;
+            let req = fill_refData.qty - getTotalAllocatedFill();
+            let fillQty = Math.max(0, Math.min(req, data.cap - data.qty));
+            if(fillQty===0) fillQty = data.cap - data.qty;
+            fill_targetRows.push({ ...data, fillQty });
+            renderTargetsFill();
+        }
+
+        function removeTargetFill(id) {
+            fill_targetRows = fill_targetRows.filter(r => r.id !== id);
+            renderTargetsFill();
+        }
+
+        function updateFillTarget(id, val) {
+            const r = fill_targetRows.find(x => x.id === id);
+            if(r) r.fillQty = parseFloat(val)||0;
+            renderTargetsFill();
+        }
+
+        function getTotalAllocatedFill() {
+            return fill_targetRows.reduce((sum, r) => sum + (parseFloat(r.fillQty)||0), 0);
+        }
+
+        function renderTargetsFill() {
+            const tbody = document.getElementById('fill-target-tbody');
+            if (fill_targetRows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color:var(--text-500);">${fill_qcConfirmed?'QC Confirmed. Select Target Container.':'Waiting for QC Confirmation...'}</td></tr>`;
+            } else {
+                tbody.innerHTML = "";
+                fill_targetRows.forEach(r => {
+                    const rem = r.cap - r.qty - r.fillQty;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>${r.id}</b></td>
+                            <td>${r.type}</td>
+                            <td><select><option>Stock</option><option>Customer</option></select></td>
+                            <td><input type="number" value="${r.fillQty}" oninput="updateFillTarget('${r.id}', this.value)" style="width:100px; padding:0.25rem;"></td>
+                            <td>${rem} Kg</td>
+                            <td><button class="btn btn-danger-ghost" onclick="removeTargetFill('${r.id}')"><i class="ri-delete-bin-line"></i></button></td>
+                        </tr>`;
+                });
+            }
+            
+            const tot = getTotalAllocatedFill();
+            document.getElementById('fill-total-allocated').innerText = tot;
+            if(fill_sourceData) {
+                const perc = (tot / fill_sourceData.qty) * 100;
+                document.getElementById('fill-allocation-bar').style.width = Math.min(perc, 100) + '%';
+            }
+        }
+
+        function submitFilling() { alert("Filling logic submitted!"); }
+
+        // --- SHARED MODAL ROUTER ---
+        function selectItem(id) {
+            closeModal();
+            if(currentModalContext === 'ib') {
+                if(currentModalMode === 'po') {
+                    ib_poData = db.pos[id];
+                    document.getElementById('ib-po-input').value = ib_poData.id;
+                    document.getElementById('ib-po-supplier').innerText = ib_poData.party;
+                    document.getElementById('ib-po-item').innerText = ib_poData.item;
+                    document.getElementById('ib-po-qty').innerText = ib_poData.qty;
+                    document.getElementById('ib-actual-qty').value = ib_poData.qty;
+                    document.getElementById('ib-po-info').style.display = 'block';
+                    document.getElementById('ib-card-logistics').style.opacity = "1";
+                    document.getElementById('ib-card-logistics').style.pointerEvents = "all";
+                    document.getElementById('ib-conn1').classList.add('active');
+                    document.getElementById('ib-node-logistics').classList.add('active');
+                } else {
+                    ib_assetData = db.empty_assets[id];
+                    document.getElementById('ib-asset-input').value = ib_assetData.id;
+                    document.getElementById('ib-asset-tag').innerText = ib_assetData.id;
+                    document.getElementById('ib-asset-cap').innerText = ib_assetData.cap;
+                    document.getElementById('ib-asset-details').style.display = 'block';
+                    document.getElementById('btn-dispatch').style.display = 'inline-flex';
+                    document.getElementById('dispatch-status').style.display = 'none';
+                    ib_dispatched = false;
+                }
+                checkIbUnlock();
+            } else if (currentModalContext === 'move') {
+                if (currentModalMode === 'ref') {
+                    move_refData = move_activeProcess === 'inbound' ? db.pos[id] : db.sos[id];
+                    document.getElementById('move-ref-input').value = move_refData.id;
+                    document.getElementById('move-ref-info-panel').style.display = 'block';
+                    document.getElementById('move-ref-item-name').innerText = move_refData.item;
+                    document.getElementById('move-ref-qty').innerText = move_refData.qty;
+                    document.getElementById('move-ref-party').innerText = move_refData.party;
+                    checkMoveUnlock();
+                } else if (currentModalMode === 'container') {
+                    addTargetMove(db.containers[id] || db.empty_assets[id]);
+                }
+            } else {
+                if(currentModalMode === 'ref') {
+                    fill_refData = fill_activeProcess==='inbound' ? db.pos[id] : db.sos[id];
+                    document.getElementById('fill-ref-input').value = fill_refData.id;
+                    document.getElementById('fill-ref-info-panel').style.display = 'block';
+                    document.getElementById('fill-conn0').classList.add('active');
+                    document.getElementById('fill-node-src').classList.add('active');
+                    document.getElementById('fill-card-src').style.opacity = "1";
+                    document.getElementById('fill-card-src').style.pointerEvents = "all";
+                } else if(currentModalMode === 'source') {
+                    fill_sourceData = db.containers[id];
+                    document.getElementById('fill-src-input').value = fill_sourceData.id;
+                    document.getElementById('fill-src-info-panel').style.display = 'block';
+                    document.getElementById('fill-src-qty').innerText = fill_sourceData.qty;
+                    document.getElementById('fill-total-available').innerText = fill_sourceData.qty;
+                    document.getElementById('fill-conn1').classList.add('active');
+                    document.getElementById('fill-node-qc').classList.add('active');
+                    document.getElementById('fill-card-qc').style.opacity = "1";
+                    document.getElementById('fill-card-qc').style.pointerEvents = "all";
+                } else if(currentModalMode === 'target') {
+                    addTargetFill(db.containers[id]);
+                }
+            }
+        }
+
+        // ==============================================
+        // MOVEMENT LOGIC
+        // ==============================================
+        let move_activeProcess = 'inbound';
+        let move_refData = null;
+        let move_targetRows = [];
+
+        function switchMovementTab(process) {
+            move_activeProcess = process;
+            
+            document.querySelectorAll('#view-movement .process-tab').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-move-' + process).classList.add('active');
+
+            if (process === 'inbound') {
+                document.getElementById('move-card-ref').style.display = 'block';
+                document.getElementById('move-label-ref').innerText = "Purchase Order Number";
+                document.getElementById('move-ref-party-label').innerText = "Supplier";
+                document.getElementById('move-from-loc').value = "Supplier Location";
+                document.getElementById('move-to-loc').value = "Main Gas Yard - Location A";
+            } else if (process === 'outbound') {
+                document.getElementById('move-card-ref').style.display = 'block';
+                document.getElementById('move-label-ref').innerText = "Sales Order Number";
+                document.getElementById('move-ref-party-label').innerText = "Customer";
+                document.getElementById('move-from-loc').value = "Main Gas Yard - Location A";
+                document.getElementById('move-to-loc').value = "Customer Location";
+            } else {
+                document.getElementById('move-card-ref').style.display = 'none';
+                document.getElementById('move-from-loc').value = "";
+                document.getElementById('move-to-loc').value = "";
+            }
+            resetMoveForm();
+        }
+
+        function resetMoveForm() {
+            move_refData = null;
+            move_targetRows = [];
+            document.getElementById('move-ref-input').value = "";
+            document.getElementById('move-ref-info-panel').style.display = 'none';
+            renderTargetsMove();
+            checkMoveUnlock();
+        }
+
+        function openModalMove(mode) {
+            currentModalContext = 'move';
+            currentModalMode = mode;
+            const list = document.getElementById('modal-list');
+            list.innerHTML = "";
+            document.getElementById('modal-title').innerText = "Select " + (mode === 'ref' ? 'Document' : 'Container');
+            
+            if (mode === 'ref') {
+                const dataStore = move_activeProcess === 'inbound' ? db.pos : db.sos;
+                Object.values(dataStore).forEach(doc => {
+                    list.innerHTML += `<div class="search-item" onclick="selectItem('${doc.id}')"><div><b>${doc.id}</b><br><small>${doc.party}</small></div><i class="ri-arrow-right-line" style="color: var(--primary);"></i></div>`;
+                });
+            } else {
+                let allContainers = {...db.containers, ...db.empty_assets};
+                Object.values(allContainers).forEach(c => {
+                    list.innerHTML += `<div class="search-item" onclick="selectItem('${c.id}')"><div><b>${c.id}</b><br><small>${c.type} / Status: ${c.status}</small></div><i class="ri-arrow-right-line" style="color: var(--primary);"></i></div>`;
+                });
+            }
+            document.getElementById('search-modal').classList.add('active');
+        }
+
+        function addTargetMove(data) {
+            if(move_targetRows.find(r => r.id === data.id)) return;
+            move_targetRows.push(data);
+            renderTargetsMove();
+            checkMoveUnlock();
+        }
+
+        function removeTargetMove(id) {
+            move_targetRows = move_targetRows.filter(r => r.id !== id);
+            renderTargetsMove();
+            checkMoveUnlock();
+        }
+
+        function renderTargetsMove() {
+            const tbody = document.getElementById('move-container-tbody');
+            if(move_targetRows.length === 0) {
+                tbody.innerHTML = `<tr id="move-empty-state"><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-500);"><i class="ri-inbox-line" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>No containers selected. Click 'Add Container' to start.</td></tr>`;
+            } else {
+                let html = "";
+                move_targetRows.forEach(c => {
+                    const qtyStr = (c.qty !== undefined) ? `${c.qty} / ${c.cap}` : `0 / ${c.cap}`;
+                    let ownershipSelect = `<select style="padding: 0.25rem;"><option>Our Asset</option><option>Customer Asset</option></select>`;
+                    if(move_activeProcess !== 'outbound') {
+                        ownershipSelect = `<span style="color:var(--text-400)">-</span>`;
+                    }
+                    html += `<tr>
+                        <td><b>${c.id}</b></td>
+                        <td>${c.type}</td>
+                        <td>${ownershipSelect}</td>
+                        <td>${c.status}</td>
+                        <td>${qtyStr} Kg</td>
+                        <td><button class="btn btn-danger-ghost" onclick="removeTargetMove('${c.id}')"><i class="ri-delete-bin-line"></i></button></td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+            }
+        }
+
+        function checkMoveUnlock() {
+            let ready = true;
+            if (move_activeProcess !== 'internal' && !move_refData) ready = false;
+            if (move_targetRows.length === 0) ready = false;
+            
+            document.getElementById('btn-submit-movement').disabled = !ready;
+        }
+
+        function submitMovement() {
+            const from = document.getElementById('move-from-loc').value;
+            const to = document.getElementById('move-to-loc').value;
+            
+            if(!from || !to) {
+                alert("Please select both From and To locations.");
+                return;
+            }
+            if(from === to) {
+                alert("From and To locations cannot be the same.");
+                return;
+            }
+            
+            alert(`Success! Container Movement record created for ${move_targetRows.length} containers.\nType: ${move_activeProcess}\nFrom: ${from} \nTo: ${to}`);
+            resetMoveForm();
+        }
+    </script>
+</body>
+</html>
