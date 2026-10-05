@@ -31,11 +31,13 @@ class ContainerFillingEntry(Document):
 				"container": item.container,
 				"filled_qty": item.qty_filled,
 				"item_code": self.item,
+				"party_type": "Customer" if self.customer else None,
 				"party": self.customer,
+				"customer": self.customer,
 				"delivery_note": self.delivery_note,
 				"entry_type": "Outward",
-				"from": source_location,
-				"to": self.customer,
+				"source_location": source_location,
+				"target_location": self.customer,
 				"reference_document_type": "Container Filling Entry",
 				"reference_document_name": self.name
 			})
@@ -45,33 +47,25 @@ class ContainerFillingEntry(Document):
 			cle.insert(ignore_permissions=True)
 
 	def create_container_movement(self, container_doc):
-		target_location = frappe.db.get_value("Delivery Note", self.delivery_note, "shipping_address_name")
-		if not target_location:
-			target_location = frappe.db.get_value("Delivery Note", self.delivery_note, "customer")
-		if not target_location:
-			frappe.throw(f"Cannot create Container Movement: No target location found. Please ensure Delivery Note {self.delivery_note} has a Shipping Address or Customer.")
-		if not frappe.db.exists("Location", target_location):
-			loc = frappe.new_doc("Location")
-			loc.location_name = target_location
-			loc.insert(ignore_permissions=True)
-		
-		source_location = container_doc.current_location
-		if source_location == target_location:
-			return None
+		customer = frappe.db.get_value("Delivery Note", self.delivery_note, "customer")
+		if not customer:
+			frappe.throw(f"Cannot create Container Movement: No customer found. Please ensure Delivery Note {self.delivery_note} has a Customer.")
 
 		cm = frappe.new_doc("Container Movements")
 		cm.company = frappe.defaults.get_user_default("Company") or container_doc.company
-		cm.purpose = "Outbound"
+		cm.purpose = "Send to Customer"
 		cm.transaction_date = now_datetime()
+		cm.party_type = "Customer"
+		cm.party = customer
 		cm.reference_document_type = "Container Filling Entry"
 		cm.reference_document_name = self.name
-		
+
 		cm.append("containers", {
 			"container": container_doc.name,
-			"source_location": source_location,
-			"target_location": target_location
+			"container_type": container_doc.type,
+			"target_location": customer,
 		})
-		
+
 		try:
 			cm.insert(ignore_permissions=True)
 			cm.submit()

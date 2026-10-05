@@ -141,6 +141,12 @@ add_to_apps_screen = [
 doc_events = {
 	"Asset": {
 		"on_submit": "container_tracker.overrides.asset.create_container_on_submit"
+	},
+	"Purchase Order": {
+		"on_cancel": "container_tracker.overrides.purchase_order.cancel_linked_container_movements"
+	},
+	"Purchase Receipt": {
+		"on_cancel": "container_tracker.overrides.purchase_order.cancel_linked_container_movements"
 	}
 }
 

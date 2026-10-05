@@ -27,8 +27,10 @@ def create_container_on_submit(doc, method):
 				container.type = container_type.name
 				container.gas_item = container_type.default_gas_item
 				container.status = "Available"
-				container.fit_to_fill = "Empty : ready"
-				container.custodian = "Plant"
+				container.owner_type = "Company"
+				container.owner_ = doc.company
+				if doc.get("location"):
+					container.current_location = doc.location
 				
 				if container_type.get("hydro_test_interval"):
 					from frappe.utils import add_months, getdate, today
@@ -39,7 +41,6 @@ def create_container_on_submit(doc, method):
 					container.naming_series = naming_series
 					
 				container.insert(ignore_permissions=True)
-				container.submit()
 				created_containers.append(container.name)
 				
 			if created_containers:

@@ -1,0 +1,100 @@
+{
+ "actions": [],
+ "autoname": "field:grade_code",
+ "creation": "2026-09-23 10:47:38.815491",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "details_section",
+  "grade_name",
+  "grade_code",
+  "purity_unit",
+  "purity",
+  "column_break_trxi",
+  "enabled",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "grade_name",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "grade_code",
+   "fieldtype": "Data",
+   "label": "Grade Code",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "purity_unit",
+   "fieldtype": "Select",
+   "label": "Purity Unit",
+   "options": "%\nPPM",
+   "reqd": 1
+  },
+  {
+   "fieldname": "purity",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Purity"
+  },
+  {
+   "fieldname": "column_break_trxi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enabled",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-23 11:00:40.832042",
+ "modified_by": "Administrator",
+ "module": "Container Tracker",
+ "name": "Gas Grade",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

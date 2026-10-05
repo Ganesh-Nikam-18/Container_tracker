@@ -7,29 +7,34 @@
  "field_order": [
   "details_section",
   "datetime",
+  "entry_type",
+  "movement_type",
+  "column_break_1",
+  "container",
   "item_code",
   "uom",
   "filled_qty",
-  "from",
-  "to",
-  "column_break_ckby",
-  "container",
-  "entry_type",
+  "movement_party_section",
   "containers_movement",
+  "party_type",
   "party",
-  "customer_name",
-  "delivery_note",
-  "dn_date",
+  "column_break_2",
+  "source_location",
+  "target_location",
   "reference_section",
   "reference_document_type",
-  "column_break_bgcu",
-  "reference_document_name"
+  "reference_document_name",
+  "delivery_note",
+  "dn_date",
+  "column_break_3",
+  "status_before",
+  "is_cancelled"
  ],
  "fields": [
   {
    "fieldname": "details_section",
    "fieldtype": "Section Break",
-   "label": "Details"
+   "label": "Container & Entry Details"
   },
   {
    "fieldname": "datetime",
@@ -41,6 +46,28 @@
    "read_only": 1
   },
   {
+   "fieldname": "entry_type",
+   "fieldtype": "Select",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Entry Type",
+   "options": "Inward\nOutward",
+   "read_only": 1
+  },
+  {
+   "fieldname": "movement_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Movement Type",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
    "fieldname": "container",
    "fieldtype": "Link",
    "in_filter": 1,
@@ -48,56 +75,6 @@
    "in_standard_filter": 1,
    "label": "Container",
    "options": "Containers",
-   "read_only": 1
-  },
-  {
-   "fieldname": "filled_qty",
-   "fieldtype": "Float",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Filled Qty",
-   "non_negative": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "containers_movement",
-   "fieldtype": "Link",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Container Movements",
-   "options": "Container Movements",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_ckby",
-   "fieldtype": "Column Break"
-  },
-  {
-   "collapsible": 1,
-   "fieldname": "reference_section",
-   "fieldtype": "Section Break",
-   "label": "Reference"
-  },
-  {
-   "fieldname": "reference_document_type",
-   "fieldtype": "Link",
-   "label": "Reference Document Type",
-   "no_copy": 1,
-   "options": "DocType",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_bgcu",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "reference_document_name",
-   "fieldtype": "Dynamic Link",
-   "label": "Reference Document Name",
-   "no_copy": 1,
-   "options": "reference_document_type",
    "read_only": 1
   },
   {
@@ -120,44 +97,85 @@
    "read_only": 1
   },
   {
-   "fieldname": "party",
+   "fieldname": "filled_qty",
+   "fieldtype": "Float",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Filled Qty",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "movement_party_section",
+   "fieldtype": "Section Break",
+   "label": "Location & Party Tracking"
+  },
+  {
+   "fieldname": "containers_movement",
    "fieldtype": "Link",
    "in_filter": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Customer",
+   "label": "Container Movement",
+   "options": "Container Movements",
+   "read_only": 1
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "label": "Party Type",
    "no_copy": 1,
-   "options": "Customer",
+   "options": "DocType",
    "read_only": 1
   },
   {
-   "fetch_from": "party.customer_name",
-   "fieldname": "customer_name",
-   "fieldtype": "Data",
-   "label": "Customer Name",
-   "no_copy": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "from",
-   "fieldtype": "Data",
-   "label": "From",
-   "read_only": 1
-  },
-  {
-   "fieldname": "entry_type",
-   "fieldtype": "Select",
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
    "in_filter": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Entry Type",
-   "options": "Inward\nOutward",
+   "label": "Party",
+   "no_copy": 1,
+   "options": "party_type",
    "read_only": 1
   },
   {
-   "fieldname": "to",
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source_location",
    "fieldtype": "Data",
-   "label": "To",
+   "label": "Source Location",
+   "read_only": 1
+  },
+  {
+   "fieldname": "target_location",
+   "fieldtype": "Data",
+   "label": "Target Location",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference & Status"
+  },
+  {
+   "fieldname": "reference_document_type",
+   "fieldtype": "Link",
+   "label": "Reference Document Type",
+   "no_copy": 1,
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_document_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Reference Document Name",
+   "no_copy": 1,
+   "options": "reference_document_type",
    "read_only": 1
   },
   {
@@ -177,13 +195,33 @@
    "label": "DN Date",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Container status before this movement was applied.",
+   "fieldname": "status_before",
+   "fieldtype": "Data",
+   "label": "Status Before",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_cancelled",
+   "fieldtype": "Check",
+   "label": "Is Cancelled",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-09 18:20:39.422775",
+ "modified": "2026-10-05 14:51:04.035666",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Ledger Entry",

@@ -8,20 +8,38 @@
   "section_break_8npf",
   "naming_series",
   "container_barcode",
-  "last_filled",
-  "current_location",
+  "owner_type",
+  "owner_",
   "column_break_rdyp",
   "asset",
   "asset_name",
   "asset_category",
-  "test_due",
-  "column_break_bloz",
   "status",
+  "column_break_bloz",
   "type",
   "capacity",
   "tare_weight",
   "section_break_item_capacities",
-  "item_capacities_html"
+  "item_capacities_html",
+  "more_info_tab",
+  "column_break_cjxb",
+  "fill_status",
+  "last_filled",
+  "test_due",
+  "custodian_type",
+  "custodian",
+  "dispatch_date",
+  "return_to_owner",
+  "column_break_dtub",
+  "current_item",
+  "current_grade",
+  "current__qty",
+  "image",
+  "location_track_section",
+  "last_known_location",
+  "column_break_uwwz",
+  "last_location_time",
+  "connections_tab"
  ],
  "fields": [
   {
@@ -46,6 +64,7 @@
    "fieldtype": "Date",
    "in_list_view": 1,
    "label": "Last Filled",
+   "no_copy": 1,
    "read_only": 1
   },
   {
@@ -62,7 +81,7 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Available\nFilled\nIn Transit\nWith Customer\nDamaged\nScrapped",
+   "options": "Available\nReserved\nIn Filling\nFilled\nIn Transit\nWith Supplier\nWith Customer\nRetured\nDamaged\nScrapped",
    "read_only": 1,
    "reqd": 1
   },
@@ -75,8 +94,7 @@
    "label": "Asset",
    "no_copy": 1,
    "options": "Asset",
-   "read_only": 1,
-   "reqd": 1
+   "read_only": 1
   },
   {
    "allow_on_submit": 1,
@@ -91,9 +109,8 @@
    "fieldtype": "Select",
    "label": "Container ID",
    "no_copy": 1,
-   "options": "CYL-.#####\nISO-.#####",
+   "options": "CYL.-.#####\nISO.-.#####",
    "print_hide": 1,
-   "read_only": 1,
    "reqd": 1
   },
   {
@@ -151,14 +168,133 @@
    "read_only": 1
   },
   {
-   "fieldname": "current_location",
+   "fieldname": "owner_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Owner Type",
+   "options": "Company\nCustomer\nSupplier",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "owner_",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Owner",
+   "options": "owner_type",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_cjxb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fill_status",
+   "fieldtype": "Select",
+   "in_filter": 1,
+   "label": "Fill Status",
+   "no_copy": 1,
+   "options": "Empty\nPartially Filled\nFilled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "more_info_tab",
+   "fieldtype": "Tab Break",
+   "label": "More Info"
+  },
+  {
+   "fieldname": "column_break_dtub",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "current_item",
    "fieldtype": "Link",
-   "label": "Current Location",
-   "options": "Location"
+   "label": "Current Item",
+   "no_copy": 1,
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "current_item.custom_available_gas_grades",
+   "fieldname": "current_grade",
+   "fieldtype": "Link",
+   "label": "Current Grade",
+   "options": "Gas Grade",
+   "read_only": 1
+  },
+  {
+   "fieldname": "current__qty",
+   "fieldtype": "Float",
+   "label": "Current  Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections",
+   "show_dashboard": 1
+  },
+  {
+   "fieldname": "custodian_type",
+   "fieldtype": "Link",
+   "label": "Custodian Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custodian",
+   "fieldtype": "Dynamic Link",
+   "in_filter": 1,
+   "in_standard_filter": 1,
+   "label": "Custodian",
+   "options": "custodian_type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dispatch_date",
+   "fieldtype": "Date",
+   "label": "Dispatch Date",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "hidden": 1,
+   "label": "Container Img",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "return_to_owner",
+   "fieldtype": "Date",
+   "label": "Return to Owner",
+   "read_only": 1
+  },
+  {
+   "fieldname": "location_track_section",
+   "fieldtype": "Section Break",
+   "label": "Location Track"
+  },
+  {
+   "fieldname": "last_known_location",
+   "fieldtype": "Geolocation",
+   "label": "Last Known Location"
+  },
+  {
+   "fieldname": "column_break_uwwz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_location_time",
+   "fieldtype": "Datetime",
+   "label": "Last Location Time",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
- "in_create": 1,
+ "image_field": "image",
  "index_web_pages_for_search": 1,
  "links": [
   {
@@ -184,9 +320,14 @@
    "link_doctype": "Container Movements",
    "link_fieldname": "container",
    "table_fieldname": "container"
+  },
+  {
+   "link_doctype": "Container Reservation Entry",
+   "link_fieldname": "container",
+   "table_fieldname": "reserved_containers"
   }
  ],
- "modified": "2026-09-18 15:36:31.001681",
+ "modified": "2026-10-05 18:12:05.489849",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Containers",

@@ -89,6 +89,18 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "arrow-down-up",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Container Movements",
+   "link_to": "movement-entry",
+   "link_type": "Page",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
    "icon": "ship",
    "indent": 0,
    "keep_closed": 0,
@@ -204,7 +216,7 @@
    "type": "Section Break"
   }
  ],
- "modified": "2026-09-07 12:52:20.176368",
+ "modified": "2026-09-29 14:54:25.808897",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Tracker",

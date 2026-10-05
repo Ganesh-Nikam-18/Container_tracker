@@ -7,8 +7,13 @@
  "engine": "InnoDB",
  "field_order": [
   "container",
-  "source_location",
-  "target_location"
+  "container_type",
+  "owner__",
+  "column_break_tcup",
+  "target_location",
+  "item_code",
+  "grade",
+  "qty"
  ],
  "fields": [
   {
@@ -20,27 +25,61 @@
    "reqd": 1
   },
   {
-   "fieldname": "source_location",
+   "fetch_from": "container.type",
+   "fieldname": "container_type",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Source Location",
-   "options": "Location",
-   "reqd": 1
+   "label": "Container Type",
+   "options": "Container Types",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "container.owner_",
+   "fieldname": "owner__",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Owner",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tcup",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "fieldname": "grade",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Grade",
+   "options": "Gas Grade",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty",
+   "read_only": 1
   },
   {
    "fieldname": "target_location",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Target Location",
-   "options": "Location",
-   "reqd": 1
+   "no_copy": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-09-18 14:46:44.485632",
+ "modified": "2026-10-05 11:01:54.989344",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Movement Items",

@@ -13,8 +13,8 @@
   "security_deposit",
   "hydro_test_interval",
   "column_break_xikl",
-  "fill_capacity",
   "capacity_uom",
+  "fill_capacity",
   "section_break_pcfk",
   "item_capacity_matrix"
  ],
@@ -45,7 +45,6 @@
    "reqd": 1
   },
   {
-   "description": "KG",
    "fieldname": "tare_weight",
    "fieldtype": "Float",
    "in_filter": 1,
@@ -107,7 +106,7 @@
    "link_fieldname": "type"
   }
  ],
- "modified": "2026-09-11 09:31:07.890442",
+ "modified": "2026-09-23 15:36:03.284892",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Types",

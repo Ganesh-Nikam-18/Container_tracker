@@ -6,15 +6,19 @@
  "engine": "InnoDB",
  "field_order": [
   "company",
-  "purpose",
-  "column_break_syll",
+  "party_type",
   "transaction_date",
+  "column_break_syll",
+  "purpose",
+  "party",
+  "expected_return_date",
   "section_break_ckra",
   "containers",
   "reference_section",
   "reference_document_type",
   "column_break_pbzf",
-  "reference_document_name"
+  "reference_document_name",
+  "amended_from"
  ],
  "fields": [
   {
@@ -34,7 +38,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Movement Type",
-   "options": "\nInbound\nOutbound\nInternal Transfer",
+   "options": "\nSend to Customer\nReceive from Customer\nSend to Supplier\nReceive from Supplier\nReturn to Supplier\nInternal Transfer\nMove to Filling\nReturn from Filling\nMove to Maintenance\nReturn from Maintenance\nScrap / Decommission",
    "reqd": 1
   },
   {
@@ -49,6 +53,13 @@
    "in_standard_filter": 1,
    "label": "Transaction Date",
    "reqd": 1
+  },
+  {
+   "depends_on": "eval:['Send to Customer','Send to Supplier','Return to Supplier'].includes(doc.purpose)",
+   "description": "Used for hydro test trip-date validation. Container test_due must be >= this date for outbound movements.",
+   "fieldname": "expected_return_date",
+   "fieldtype": "Date",
+   "label": "Expected Return Date"
   },
   {
    "collapsible": 1,
@@ -83,12 +94,41 @@
    "fieldtype": "Table",
    "label": "Containers",
    "options": "Container Movement Items"
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "label": "Party Type",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "label": "Party",
+   "options": "party_type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Container Movements",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-09-18 16:13:15.300555",
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Container Ledger Entry",
+   "link_fieldname": "containers_movement"
+  }
+ ],
+ "modified": "2026-10-05 14:49:45.883629",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Movements",
@@ -96,6 +136,7 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -105,9 +146,11 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
+   "submit": 1,
    "write": 1
   },
   {
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -117,11 +160,11 @@
    "report": 1,
    "role": "Asset Manager",
    "share": 1,
+   "submit": 1,
    "write": 1
   },
   {
    "create": 1,
-   "delete": 1,
    "email": 1,
    "export": 1,
    "print": 1,
