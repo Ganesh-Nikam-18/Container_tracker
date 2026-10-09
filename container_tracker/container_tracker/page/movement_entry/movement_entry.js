@@ -562,17 +562,31 @@ window.on_docname_change = function () {
 	});
 
 	// Check if containers have already been sent/linked to this document:
+	window.show_ops_loading(`⌛ Loading containers for ${doctype} ${docname}...`);
 	frappe.call({
 		method: 'container_tracker.container_tracker.page.movement_entry.movement_entry.get_dispatched_containers',
 		args: { doctype: doctype, docname: docname },
 		callback: function (r) {
 			if (r.message && r.message.dispatched && r.message.dispatched.length > 0) {
 				window.render_dispatched_cards_in_ops(r.message.dispatched);
+			} else if (r.message && r.message.dispatched && r.message.dispatched.length === 0) {
+				window.reset_ops_area();
 			}
 		}
 	});
 
 	$('#dispatched-card').hide();
+	$('#dispatched-area').empty();
+};
+
+window.show_ops_loading = function (msg) {
+	let message = msg || "Loading Containers & Operations Data...";
+	$('#ops-subcontent-area').html(`
+		<div class="text-center p-4 border rounded bg-white my-2" style="border-radius: 8px;">
+			<div class="spinner-border text-primary mb-2" role="status" style="width: 2.2rem; height: 2.2rem; border-width: 0.22em;"></div>
+			<div class="text-muted font-weight-bold" style="font-size: 13px;">${message}</div>
+		</div>
+	`);
 };
 
 window.on_party_change = function () {
@@ -592,6 +606,23 @@ window.on_party_change = function () {
 				}
 			});
 		}
+	} else if (party && (!window.f_docname || !window.f_docname.get_value())) {
+		let dt = window.f_doctype ? window.f_doctype.get_value() : null;
+		let p_type = window.f_party_type ? window.f_party_type.get_value() : null;
+		window.show_ops_loading(`⌛ Loading containers for ${party}...`);
+		frappe.call({
+			method: 'container_tracker.container_tracker.page.movement_entry.movement_entry.get_dispatched_containers',
+			args: { doctype: dt, docname: null, party_type: p_type, party: party },
+			callback: function (r) {
+				if (r.message && r.message.dispatched && r.message.dispatched.length > 0) {
+					window.render_dispatched_cards_in_ops(r.message.dispatched);
+				} else {
+					window.reset_ops_area();
+				}
+			}
+		});
+		$('#dispatched-card').hide();
+		$('#dispatched-area').empty();
 	}
 };
 
@@ -651,19 +682,15 @@ window.render_doc_items = function (doctype, docname, items) {
 	$('#doc-items-area').html(html);
 	$('#doc-items-card').slideDown();
 
-	if (items && items.length > 0) {
-		let first = items[0];
-		setTimeout(() => {
-			window.select_item_for_ops(first.item_code, first.default_container_type || '', first.qty, first.handled_qty || 0);
-		}, 150);
-	}
+	// Reset Step 2 area so it opens ONLY when user clicks an item Action button
+	window.reset_ops_area();
 };
 
 window.render_dispatched_containers = function (doctype, docname, dispatched) {
 	let html = `
 		<div class="alert alert-success py-2 px-3 mb-2 d-flex justify-content-between align-items-center" style="font-size: 12px;">
 			<div>
-				<strong>📦 Containers Sent / Linked to ${doctype}: ${docname}</strong> — Found <b>${dispatched.length}</b> container(s).
+				<strong>Containers Sent / Linked to ${doctype}: ${docname}</strong> — Found <b>${dispatched.length}</b> container(s).
 			</div>
 			<button class="btn btn-sm btn-primary" onclick="window.receive_dispatched_batch('${docname}')">
 				<i class="fa fa-download"></i> Receive Selected Back to Plant
@@ -695,16 +722,19 @@ window.render_dispatched_containers = function (doctype, docname, dispatched) {
 			`<span class="text-muted" style="font-size:11px;"><i class="fa fa-check-circle text-success"></i> Reserved</span>` :
 			`<button class="btn btn-warning btn-xs" onclick="window.reserve_single_container('${row.container}', '${row.item_code || ''}')"><i class="fa fa-bookmark"></i> Reserve</button>`;
 
+		let cancel_btn = (row.movement && row.movement !== "-") ?
+			`<button class="btn btn-outline-danger btn-xs ml-1" onclick="window.cancel_movement_from_page('${row.movement}')"><i class="fa fa-times text-danger"></i> Cancel Movement</button>` : '';
+
 		html += `
-			<tr>
-				<td class="text-center"><input type="checkbox" class="disp-cb" data-id="${row.container}" data-item="${row.item_code}" data-type="${row.container_type}"></td>
+			<tr class="disp-row" data-movement="${row.movement || ''}" data-container="${row.container}">
+				<td class="text-center"><input type="checkbox" class="disp-cb" data-id="${row.container}" data-item="${row.item_code}" data-type="${row.container_type}" data-movement="${row.movement || ''}"></td>
 				<td><strong>${row.container}</strong></td>
 				<td>${row.container_type || ''}</td>
 				<td>${row.item_code || ''}</td>
 				<td>${status_badge}</td>
 				<td>${row.date || ''}</td>
 				<td><a href="/app/container-movements/${row.movement}" target="_blank">${row.movement}</a></td>
-				<td class="text-center">${reserve_btn}</td>
+				<td class="text-center">${reserve_btn}${cancel_btn}</td>
 			</tr>
 		`;
 	});
@@ -728,11 +758,14 @@ window.render_dispatched_cards_in_ops = function(dispatched, item_code, allow_mo
 			`<span class="badge badge-info">${c.status || 'Dispatched'}</span>`;
 
 		let reserve_btn = is_res ?
-			`<span class="text-muted" style="font-size:11px;"><i class="fa fa-check-circle text-success"></i> Reserved</span>` :
-			`<button class="btn btn-warning btn-xs mt-1" onclick="window.reserve_single_container('${c.container}', '${c.item_code || item_code || ''}')"><i class="fa fa-bookmark"></i> Reserve</button>`;
+			`<button class="btn btn-outline-danger btn-xs" onclick="window.return_single_container('${c.container}')"><i class="fa fa-undo"></i> Return</button>` :
+			`<button class="btn btn-warning btn-xs" onclick="window.reserve_single_container('${c.container}', '${c.item_code || item_code || ''}')"><i class="fa fa-bookmark"></i> Reserve</button>`;
+
+		let cancel_btn = (c.movement && c.movement !== "-") ?
+			`<button class="btn btn-outline-danger btn-xs" onclick="window.cancel_movement_from_page('${c.movement}')"><i class="fa fa-times text-danger"></i> Cancel Movement</button>` : '';
 
 		return `
-			<div class="container-grid-box border rounded p-2 bg-white" data-id="${c.container}" style="min-width:200px;">
+			<div class="container-grid-box disp-card border rounded p-2 bg-white" data-id="${c.container}" data-movement="${c.movement || ''}" style="min-width:215px; transition: all 0.2s ease;">
 				<div class="d-flex justify-content-between align-items-center">
 					<strong style="font-size:13px;">${c.container}</strong>
 					${status_badge}
@@ -743,16 +776,17 @@ window.render_dispatched_cards_in_ops = function(dispatched, item_code, allow_mo
 				<div class="text-muted mt-1" style="font-size:10px;">
 					📅 Sent: ${c.date || '-'} | Hydro: ${c.test_due || 'N/A'}
 				</div>
-				<div class="mt-2 text-right">
-					${reserve_btn}
+				<div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center">
+					<div>${reserve_btn}</div>
+					<div>${cancel_btn}</div>
 				</div>
 			</div>
 		`;
 	}).join('');
 
 	let header_title = item_code ?
-		`📦 Allocated / Dispatched Containers for <u>${item_code}</u> (${dispatched.length})` :
-		`📦 Containers Sent / Linked to Document (${dispatched.length})`;
+		`Allocated / Dispatched Containers for <u>${item_code}</u> (${dispatched.length})` :
+		`Containers Sent / Linked to Document (${dispatched.length})`;
 
 	let more_btn_html = allow_more_allocation ?
 		`<button class="btn btn-primary btn-sm ml-2" id="btn-allocate-more-for-item"><i class="fa fa-plus"></i> Allocate Remaining Containers</button>` : '';
@@ -885,6 +919,120 @@ window.reserve_single_container = function (container_id, item_code) {
 	dialog.show();
 };
 
+window.return_single_container = function (container_id) {
+	frappe.confirm(
+		__('Are you sure you want to return container <b>{0}</b> from reservation?', [container_id]),
+		() => {
+			frappe.call({
+				method: 'container_tracker.container_tracker.doctype.container_reservation_entry.container_reservation_entry.return_container_reservation',
+				args: { containers: [container_id] },
+				callback: function (r) {
+					if (r.message && r.message.message) {
+						frappe.show_alert({ message: r.message.message, indicator: 'green' }, 7);
+						let doc_name = window.f_docname ? window.f_docname.get_value() : null;
+						if (doc_name) {
+							window.on_docname_change();
+						} else if (window.fetch_direct_containers) {
+							window.fetch_direct_containers();
+						}
+					}
+				}
+			});
+		}
+	);
+};
+
+window.cancel_movement_from_page = function (movement_name) {
+	if (!movement_name || movement_name === "-") {
+		frappe.msgprint(__("No valid Container Movement entry associated with this container."));
+		return;
+	}
+
+	// Highlight all container cards & table rows matching movement_name in red
+	$('.disp-card').css({ 'border-color': '', 'border-width': '1px', 'background-color': '#ffffff' });
+	$('.disp-row').removeClass('table-warning table-danger');
+
+	let matching_cards = $(`.disp-card[data-movement="${movement_name}"]`);
+	let matching_rows = $(`.disp-row[data-movement="${movement_name}"]`);
+
+	matching_cards.css({ 'border-color': '#ef4444', 'border-width': '2px', 'background-color': '#fff5f5' });
+	matching_rows.addClass('table-danger');
+	$('.disp-cb').prop('checked', false);
+	$(`.disp-cb[data-movement="${movement_name}"]`).prop('checked', true);
+
+	let containers_in_mov = [];
+	let target_elements = matching_cards.length > 0 ? matching_cards : matching_rows;
+	target_elements.each(function () {
+		let c_id = $(this).data('id') || $(this).data('container');
+		if (c_id && !containers_in_mov.includes(`<b>${c_id}</b>`)) {
+			containers_in_mov.push(`<b>${c_id}</b>`);
+		}
+	});
+
+	let summary_text = containers_in_mov.length > 0 ?
+		containers_in_mov.join(', ') :
+		`All containers in movement ${movement_name}`;
+
+	let dialog = new frappe.ui.Dialog({
+		title: __('Cancel Movement Entry: {0}', [movement_name]),
+		fields: [
+			{
+				fieldname: 'info_html',
+				fieldtype: 'HTML',
+				options: `
+					<div class="alert alert-warning py-2 px-3 mb-3" style="font-size: 12px;">
+						<strong>⚠️ Revert Movement <b>${movement_name}</b>?</strong><br>
+						Will revert <b>${containers_in_mov.length || 'all'} container(s)</b> (${summary_text}) back to <b>Plant Main Store</b>.
+					</div>
+				`
+			},
+			{
+				label: __('Reason for Cancellation'),
+				fieldname: 'reason',
+				fieldtype: 'Small Text',
+				reqd: 0,
+				description: __('Optional comment explaining why this movement entry is being cancelled.')
+			}
+		],
+		onhide: function () {
+			// Clear card & row highlighting on dialog close
+			$('.disp-card').css({ 'border-color': '', 'border-width': '1px', 'background-color': '#ffffff' });
+			$('.disp-row').removeClass('table-warning table-danger');
+			$('.disp-cb').prop('checked', false);
+		},
+		primary_action_label: __('Confirm Cancellation'),
+		primary_action: function (values) {
+			dialog.get_primary_btn().prop('disabled', true);
+			frappe.call({
+				method: 'container_tracker.container_tracker.page.movement_entry.movement_entry.cancel_movement_entry',
+				args: {
+					movement_name: movement_name,
+					reason: values ? values.reason : ''
+				},
+				freeze: true,
+				freeze_message: __('Cancelling Container Movement {0}...', [movement_name]),
+				callback: function (r) {
+					dialog.hide();
+					if (r.message && r.message.status === 'success') {
+						frappe.show_alert({ message: r.message.message, indicator: 'green' }, 7);
+						let doc_name = window.f_docname ? window.f_docname.get_value() : null;
+						if (doc_name) {
+							window.on_docname_change();
+						} else if (window.fetch_direct_containers) {
+							window.fetch_direct_containers();
+						}
+					}
+				},
+				always: function () {
+					dialog.get_primary_btn().prop('disabled', false);
+				}
+			});
+		}
+	});
+
+	dialog.show();
+};
+
 window.receive_dispatched_batch = function (docname) {
 	let selected = [];
 	$('.disp-cb:checked').each(function () {
@@ -934,6 +1082,7 @@ window.select_item_for_ops = function (item_code, container_type, req_qty, handl
 	let docname = window.f_docname ? window.f_docname.get_value() : null;
 
 	$('#grid-header-title').html(`Step 2: Container Operations for <span class="text-primary">${item_code}</span>`);
+	window.show_ops_loading(`⌛ Loading container operations for ${item_code}...`);
 
 	if (docname) {
 		frappe.call({
@@ -943,7 +1092,7 @@ window.select_item_for_ops = function (item_code, container_type, req_qty, handl
 				let dispatched_all = (r.message && r.message.dispatched) ? r.message.dispatched : [];
 				let item_dispatched = dispatched_all.filter(c => !c.item_code || c.item_code === item_code);
 
-				if (item_dispatched.length > 0) {
+				if (handled_qty > 0 && item_dispatched.length > 0) {
 					window.render_dispatched_cards_in_ops(item_dispatched, item_code, pending_qty > 0, function() {
 						window.render_allocation_options_for_item_in_target('#allocation-more-area', purpose, item_code, container_type, pending_qty);
 					});
@@ -979,7 +1128,7 @@ window.render_allocation_options_for_item_in_target = function (target_selector,
 					<div class="border rounded p-3 bg-light">
 						<h6 class="font-weight-bold m-0">Option B: Supplier's Containers</h6>
 						<small class="text-muted d-block mb-2">Supplier is providing gas in their own containers.</small>
-						<button class="btn btn-outline-secondary btn-sm" onclick="frappe.msgprint('Supplier containers will be received when Purchase Receipt arrives.')">Check Supplier Shipment</button>
+						<button class="btn btn-outline-secondary btn-sm" onclick="window.open_register_supplier_containers_dialog('${item_code}', '${container_type}', ${pending_qty})">Register / Receive Supplier Containers</button>
 					</div>
 				</div>
 			</div>
@@ -1033,7 +1182,7 @@ window.render_allocation_options_for_item = function (purpose, item_code, contai
 					<div class="border rounded p-3 bg-light">
 						<h6 class="font-weight-bold m-0">Option B: Supplier's Containers</h6>
 						<small class="text-muted d-block mb-2">Supplier is providing gas in their own containers.</small>
-						<button class="btn btn-outline-secondary btn-sm" onclick="frappe.msgprint('Supplier containers will be received when Purchase Receipt arrives.')">Check Supplier Shipment</button>
+						<button class="btn btn-outline-secondary btn-sm" onclick="window.open_register_supplier_containers_dialog('${item_code}', '${container_type}', ${pending_qty})">Register / Receive Supplier Containers</button>
 					</div>
 				</div>
 			</div>
@@ -1116,7 +1265,7 @@ window.fetch_our_containers_for_item = function (item_code, container_type, pend
 			item_code: item_code,
 			container_type: (container_type === 'null' || container_type === 'undefined') ? null : container_type,
 			reference_name: docname,
-			limit: Math.max(1, pending_qty * 3)
+			limit: Math.max(100, Math.ceil(pending_qty * 3))
 		},
 		callback: function (r) {
 			if (!r.message || r.message.length === 0) {
@@ -1132,6 +1281,279 @@ window.fetch_our_containers_for_item = function (item_code, container_type, pend
 			window.render_allocated_containers_grid(target, r.message, item_code, pending_qty);
 		}
 	});
+};
+
+window.open_register_party_containers_dialog = function (item_code, container_type, qty_hint) {
+	let party_type = window.f_party_type ? window.f_party_type.get_value() : (window.f_purpose ? (window.f_purpose.get_value().includes('Customer') ? 'Customer' : 'Supplier') : 'Supplier');
+	let party = window.f_party ? window.f_party.get_value() : '';
+	let doc_type = window.f_doctype ? window.f_doctype.get_value() : null;
+	let doc_name = window.f_docname ? window.f_docname.get_value() : null;
+
+	if (!party) {
+		frappe.msgprint(__('Please select a {0} in Step 1 before registering Party containers.', [party_type || 'Party']));
+		return;
+	}
+
+	let initial_type = (container_type !== 'null' && container_type !== 'undefined' && container_type) ? container_type : '';
+
+	let dialog = new frappe.ui.Dialog({
+		title: __('Quick Register & Receive {0} Containers', [party_type]),
+		size: 'large',
+		fields: [
+			{
+				fieldname: 'section_break_auto',
+				fieldtype: 'Section Break',
+				label: __('System Context (Auto-Set)')
+			},
+			{
+				label: __('Owner Type'),
+				fieldname: 'owner_type',
+				fieldtype: 'Select',
+				options: 'Supplier\nCustomer\nCompany',
+				default: party_type,
+				read_only: 1
+			},
+			{
+				label: __('Owner'),
+				fieldname: 'party',
+				fieldtype: 'Data',
+				default: party,
+				read_only: 1
+			},
+			{
+				fieldname: 'col_break_auto_right',
+				fieldtype: 'Column Break'
+			},
+			{
+				label: __('Status'),
+				fieldname: 'status',
+				fieldtype: 'Data',
+				default: 'Filled',
+				read_only: 1
+			},
+			{
+				label: __('Fill Status'),
+				fieldname: 'fill_status',
+				fieldtype: 'Data',
+				default: 'Filled',
+				read_only: 1
+			},
+			{
+				fieldname: 'section_break_manual',
+				fieldtype: 'Section Break',
+				label: __('Container & Item Details (Fill Manually)')
+			},
+			{
+				label: __('Container Type'),
+				fieldname: 'container_type',
+				fieldtype: 'Link',
+				options: 'Container Types',
+				default: initial_type,
+				reqd: 1,
+				description: __('Select container type to fetch tare weight, fill capacity, and test interval.')
+			},
+			{
+				label: __('Number of Containers'),
+				fieldname: 'qty',
+				fieldtype: 'Int',
+				default: 1,
+				reqd: 1,
+				description: __('Count of physical cylinders being received.')
+			},
+			{
+				label: __('Return to Owner Date'),
+				fieldname: 'return_to_owner',
+				fieldtype: 'Date',
+				default: frappe.datetime.add_days(frappe.datetime.get_today(), 14),
+				description: __('Expected date to return cylinder back to party.')
+			},
+			{
+				fieldname: 'col_break_item_info',
+				fieldtype: 'Column Break'
+			},
+			{
+				label: __('Current Item'),
+				fieldname: 'item_code',
+				fieldtype: 'Link',
+				options: 'Item',
+				default: item_code,
+				reqd: 1
+			},
+			{
+				label: __('Current Grade'),
+				fieldname: 'grade',
+				fieldtype: 'Link',
+				options: 'Gas Grade'
+			},
+			{
+				label: __('Current Qty (Gas Volume)'),
+				fieldname: 'current_qty',
+				fieldtype: 'Float',
+				description: __('Gas volume in each cylinder. Defaults to type fill capacity.')
+			},
+			{
+				label: __('Hydro Test Due Date'),
+				fieldname: 'test_due',
+				fieldtype: 'Date',
+				default: frappe.datetime.get_today(),
+				description: __('Auto-calculated from Container Type test interval.')
+			},
+			{
+				fieldname: 'section_break_summary',
+				fieldtype: 'Section Break',
+				label: __('Container Type Matrix & Summary')
+			},
+			{
+				fieldname: 'summary_html',
+				fieldtype: 'HTML',
+				options: '<div class="alert alert-light border p-3 text-muted text-center" style="font-size: 13px;">Select a Container Type to load tare weight, fill capacity, and test interval.</div>'
+			}
+		],
+		primary_action_label: __('Register & Receive Containers'),
+		primary_action: function (values) {
+			if (!values.container_type) {
+				frappe.msgprint(__('Please select a Container Type.'));
+				return;
+			}
+			if (!values.qty || values.qty <= 0) {
+				frappe.msgprint(__('Number of Containers must be at least 1.'));
+				return;
+			}
+			dialog.get_primary_btn().prop('disabled', true);
+
+			frappe.call({
+				method: 'container_tracker.container_tracker.page.movement_entry.movement_entry.register_and_receive_party_containers',
+				args: {
+					party_type: values.owner_type,
+					party: values.party,
+					item_code: values.item_code,
+					container_type: values.container_type,
+					qty: values.qty,
+					grade: values.grade,
+					current_qty: values.current_qty,
+					return_to_owner: values.return_to_owner,
+					test_due: values.test_due,
+					reference_doctype: doc_type,
+					reference_name: doc_name
+				},
+				freeze: true,
+				freeze_message: __('Registering & Receiving Containers for {0}...', [values.party]),
+				callback: function (r) {
+					dialog.hide();
+					if (r.message && r.message.status === 'success') {
+						frappe.show_alert({ message: r.message.message, indicator: 'green' }, 7);
+						if (doc_name) {
+							window.on_docname_change();
+						} else {
+							window.on_party_change();
+						}
+					}
+				},
+				always: function () {
+					dialog.get_primary_btn().prop('disabled', false);
+				}
+			});
+		}
+	});
+
+	dialog.fill_cap = 0;
+	dialog.tare_weight = 0;
+	dialog.cap_uom = '';
+	dialog.test_interval = 12;
+
+	let update_summary = function () {
+		let count = parseInt(dialog.get_value('qty')) || 0;
+		let current_qty = parseFloat(dialog.get_value('current_qty')) || dialog.fill_cap || 0;
+		let cap_uom = dialog.cap_uom || '';
+		let tare_weight = dialog.tare_weight || 0;
+		let total_vol = count * current_qty;
+
+		let html = `
+			<div class="card p-3 bg-light border shadow-sm" style="font-size: 13px;">
+				<div class="row text-center align-items-center">
+					<div class="col-md-3 border-right mb-2 mb-md-0">
+						<span class="text-muted d-block small uppercase font-weight-bold" style="letter-spacing: 0.5px;">Tare Weight</span>
+						<strong class="text-dark font-md" style="font-size: 15px;">${tare_weight > 0 ? (tare_weight + ' kg') : 'N/A'}</strong>
+					</div>
+					<div class="col-md-3 border-right mb-2 mb-md-0">
+						<span class="text-muted d-block small uppercase font-weight-bold" style="letter-spacing: 0.5px;">Type Capacity</span>
+						<strong class="text-primary font-md" style="font-size: 15px;">${dialog.fill_cap > 0 ? (dialog.fill_cap + ' ' + cap_uom) : 'N/A'}</strong>
+					</div>
+					<div class="col-md-3 border-right mb-2 mb-md-0">
+						<span class="text-muted d-block small uppercase font-weight-bold" style="letter-spacing: 0.5px;">Cylinder Count</span>
+						<strong class="text-dark font-md" style="font-size: 15px;">${count} Cylinder(s)</strong>
+					</div>
+					<div class="col-md-3">
+						<span class="text-muted d-block small uppercase font-weight-bold" style="letter-spacing: 0.5px;">Total Gas Volume</span>
+						<strong class="text-success font-md" style="font-size: 15px;">${total_vol > 0 ? (total_vol.toFixed(2) + ' ' + cap_uom) : 'N/A'}</strong>
+					</div>
+				</div>
+			</div>
+		`;
+		dialog.get_field('summary_html').$wrapper.html(html);
+	};
+
+	let load_type_specs = function (selected_type) {
+		if (!selected_type) {
+			dialog.fill_cap = 0;
+			dialog.tare_weight = 0;
+			dialog.cap_uom = '';
+			update_summary();
+			return;
+		}
+
+		frappe.db.get_value('Container Types', selected_type, ['fill_capacity', 'capacity_uom', 'tare_weight', 'hydro_test_interval'], function (r) {
+			if (r) {
+				let fill_capacity = parseFloat(r.fill_capacity) || 0;
+				let tare_weight = parseFloat(r.tare_weight) || 0;
+				let capacity_uom = r.capacity_uom || '';
+				let interval_months = parseInt(r.hydro_test_interval) || 12;
+
+				dialog.fill_cap = fill_capacity;
+				dialog.tare_weight = tare_weight;
+				dialog.cap_uom = capacity_uom;
+				dialog.test_interval = interval_months;
+
+				let calc_due = frappe.datetime.add_months ?
+					frappe.datetime.add_months(frappe.datetime.get_today(), interval_months) :
+					frappe.datetime.add_days(frappe.datetime.get_today(), interval_months * 30);
+
+				dialog.set_value('test_due', calc_due);
+
+				if (!dialog.get_value('current_qty') || dialog.get_value('current_qty') == 0) {
+					dialog.set_value('current_qty', fill_capacity);
+				}
+
+				update_summary();
+			}
+		});
+	};
+
+	dialog.get_field('container_type').df.onchange = function () {
+		let val = dialog.get_value('container_type');
+		load_type_specs(val);
+	};
+
+	dialog.get_field('qty').df.onchange = function () {
+		update_summary();
+	};
+
+	dialog.get_field('current_qty').df.onchange = function () {
+		update_summary();
+	};
+
+	dialog.show();
+
+	setTimeout(() => {
+		let selected = dialog.get_value('container_type');
+		if (selected) {
+			load_type_specs(selected);
+		}
+	}, 150);
+};
+
+window.open_register_supplier_containers_dialog = function (item_code, container_type, pending_qty) {
+	window.open_register_party_containers_dialog(item_code, container_type, pending_qty);
 };
 
 window.fetch_direct_containers = function () {

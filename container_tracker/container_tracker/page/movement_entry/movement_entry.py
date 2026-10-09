@@ -71,7 +71,7 @@ def get_containers_for_board(status=None, owner_type=None, custodian=None, item_
 			"current__qty", "capacity", "last_filled"
 		],
 		or_filters={"name": ["like", f"%{search}%"]} if search else None,
-		limit_page_length=int(limit)
+		limit_page_length=int(flt(limit)) if limit else 300
 	)
 
 	valid_container_types = set()
@@ -285,6 +285,126 @@ def create_movement_generic(
 	movement.submit()
 
 	return {"name": movement.name, "purpose": purpose}
+
+
+@frappe.whitelist()
+def cancel_movement_entry(movement_name, reason=None):
+	"""Cancel a submitted Container Movements document directly from movement entry page."""
+	if not movement_name:
+		frappe.throw("Movement name is required")
+
+	if not frappe.has_permission("Container Movements", "cancel", movement_name):
+		frappe.throw(f"No permission to cancel Container Movement {movement_name}")
+
+	mov = frappe.get_doc("Container Movements", movement_name)
+	if mov.docstatus != 1:
+		frappe.throw(f"Movement {movement_name} is not in submitted state.")
+
+	mov.cancel()
+
+	if reason:
+		mov.add_comment("Comment", f"Movement cancelled from Movement Entry workspace. Reason: {reason}")
+		for item in mov.get("containers"):
+			c_doc = frappe.get_doc("Containers", item.container)
+			c_doc.add_comment("Comment", f"Movement {movement_name} cancelled. Reason: {reason}")
+
+	return {"status": "success", "message": f"Movement {movement_name} cancelled successfully"}
+
+
+@frappe.whitelist()
+def register_and_receive_party_containers(
+	party_type, party, item_code, container_type, qty,
+	grade=None, current_qty=None, return_to_owner=None, test_due=None,
+	reference_doctype=None, reference_name=None, **kwargs
+):
+	"""
+	Quick register Party-owned containers (owner_type='Supplier' or 'Customer')
+	with status='Filled' & fill_status='Filled' and auto-submit a Receive movement entry.
+	"""
+	if not party_type or party_type not in ["Supplier", "Customer"]:
+		party_type = "Supplier"
+	if not party:
+		frappe.throw(f"{party_type} is required")
+	if not container_type:
+		frappe.throw("Container Type is required")
+
+	qty = max(1, int(qty or 1))
+	current_qty = flt(current_qty or 0)
+
+	company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+	created_containers = []
+
+	for i in range(qty):
+		doc_dict = {
+			"doctype": "Containers",
+			"owner_type": party_type,
+			"owner_": party,
+			"type": container_type,
+			"status": "Filled",
+			"fill_status": "Filled",
+			"current_item": item_code,
+			"current_grade": grade,
+			"current__qty": current_qty,
+			"return_to_owner": return_to_owner,
+			"current_location": "Plant Main Store",
+			"custodian_type": "Company",
+			"custodian": company,
+			"naming_series": "CYL.-.#####"
+		}
+		if test_due:
+			doc_dict["test_due"] = test_due
+
+		c_doc = frappe.get_doc(doc_dict)
+		c_doc.insert(ignore_permissions=True)
+		created_containers.append(c_doc.name)
+
+	purpose = f"Receive from {party_type}"
+	mov_containers = [
+		{
+			"name": cname,
+			"item_code": item_code,
+			"grade": grade,
+			"qty": current_qty
+		}
+		for cname in created_containers
+	]
+
+	res = create_movement_generic(
+		purpose=purpose,
+		containers_json=json.dumps(mov_containers),
+		party_type=party_type,
+		party=party,
+		reference_doctype=reference_doctype,
+		reference_name=reference_name
+	)
+
+	return {
+		"status": "success",
+		"message": f"Successfully registered {len(created_containers)} {party_type} container(s) and logged movement {res.get('name')}!",
+		"created_containers": created_containers,
+		"movement_name": res.get("name")
+	}
+
+
+@frappe.whitelist()
+def register_and_receive_supplier_containers(
+	supplier, item_code, container_type, qty,
+	grade=None, current_qty=None, return_to_owner=None, test_due=None,
+	reference_doctype=None, reference_name=None, **kwargs
+):
+	return register_and_receive_party_containers(
+		party_type="Supplier",
+		party=supplier,
+		item_code=item_code,
+		container_type=container_type,
+		qty=qty,
+		grade=grade,
+		current_qty=current_qty,
+		return_to_owner=return_to_owner,
+		test_due=test_due,
+		reference_doctype=reference_doctype,
+		reference_name=reference_name
+	)
 
 
 # Location helper functions removed — party assignment is now handled
@@ -541,8 +661,14 @@ def get_document_items(doctype, docname):
 						for m in matrices:
 							max_fills[m.parent] = m.max_fill
 
+						type_doc_capacities = {}
+						t_docs = frappe.get_all("Container Types", filters={"name": ["in", types]}, fields=["name", "fill_capacity"])
+						for td in t_docs:
+							type_doc_capacities[td.name] = flt(td.fill_capacity)
+
 						for mi in movement_items:
-							handled_volume += max_fills.get(mi.container_type, 0)
+							cap = max_fills.get(mi.container_type) or type_doc_capacities.get(mi.container_type) or 0
+							handled_volume += cap
 
 			items.append({
 				"item_code": item.item_code,
@@ -569,11 +695,12 @@ def get_available_company_containers(item_code, container_type=None, reference_n
 	containers = frappe.get_all("Containers",
 		filters=filters,
 		fields=["name", "test_due", "current_location", "type", "owner_type", "fill_status", "status", "custodian"],
-		limit_page_length=max(1, int(limit)) if limit else 100
+		limit_page_length=max(1, int(flt(limit))) if limit else 100
 	)
 
 	container_types = list(set([c.type for c in containers if c.type]))
 	max_fills = {}
+	type_doc_capacities = {}
 	if container_types:
 		matrices = frappe.get_all("Item Capacity Matrix",
 			filters={"parent": ["in", container_types], "item": item_code},
@@ -582,6 +709,10 @@ def get_available_company_containers(item_code, container_type=None, reference_n
 		for m in matrices:
 			max_fills[m.parent] = m.max_fill
 
+		t_docs = frappe.get_all("Container Types", filters={"name": ["in", container_types]}, fields=["name", "fill_capacity"])
+		for td in t_docs:
+			type_doc_capacities[td.name] = flt(td.fill_capacity)
+
 	from frappe.utils import getdate, nowdate
 	valid_containers = []
 	today = getdate(nowdate())
@@ -589,7 +720,9 @@ def get_available_company_containers(item_code, container_type=None, reference_n
 	for c in containers:
 		if c.test_due and getdate(c.test_due) < today:
 			continue
-		if c.type not in max_fills or not max_fills.get(c.type):
+
+		cap = max_fills.get(c.type) or type_doc_capacities.get(c.type) or 0
+		if not cap:
 			continue
 
 		# If reserved, verify if reserved for this document
@@ -609,7 +742,7 @@ def get_available_company_containers(item_code, container_type=None, reference_n
 				if reference_name and reserved_ref and reserved_ref != reference_name:
 					continue  # Reserved for a different document!
 
-		c["capacity"] = max_fills.get(c.type)
+		c["capacity"] = cap
 		valid_containers.append(c)
 
 	return valid_containers
@@ -630,7 +763,7 @@ def get_filled_containers_for_item(item_code, container_type=None, party=None, l
 			"holder_since", "dispatch_date", "current_item", "current_grade",
 			"current__qty", "capacity", "last_filled"
 		],
-		limit_page_length=int(limit) if limit else 300
+		limit_page_length=int(flt(limit)) if limit else 300
 	)
 
 	valid_container_types = set()
@@ -768,32 +901,57 @@ def receive_dispatched_containers(po_name, pr_name, target_location, containers)
 
 
 @frappe.whitelist()
-def get_dispatched_containers(doctype, docname):
-	if not frappe.has_permission(doctype, "read", docname):
-		frappe.throw("No permission")
+def get_dispatched_containers(doctype=None, docname=None, party_type=None, party=None):
+	if doctype and docname:
+		if not frappe.has_permission(doctype, "read", docname):
+			frappe.throw("No permission")
 
-	po_names = []
-	if doctype == "Purchase Order":
-		po_names = [docname]
-	elif doctype == "Purchase Receipt":
-		pr_items = frappe.get_all("Purchase Receipt Item", filters={"parent": docname}, fields=["purchase_order"])
-		po_names = list(set([i.purchase_order for i in pr_items if i.purchase_order]))
+	ref_doc_names = [docname] if docname else []
+	party_field = None
+
+	if doctype:
+		if doctype in ["Purchase Order", "Purchase Receipt"]:
+			party_type = "Supplier"
+			party_field = "supplier"
+			if doctype == "Purchase Order":
+				ref_doc_names = [docname]
+			elif doctype == "Purchase Receipt" and docname:
+				pr_items = frappe.get_all("Purchase Receipt Item", filters={"parent": docname}, fields=["purchase_order"])
+				po_names = list(set([i.purchase_order for i in pr_items if i.purchase_order]))
+				ref_doc_names = list(set([docname] + po_names))
+		elif doctype in ["Sales Order", "Delivery Note", "Sales Invoice"]:
+			party_type = "Customer"
+			party_field = "customer"
+			if doctype == "Sales Order":
+				ref_doc_names = [docname]
+			elif doctype == "Delivery Note" and docname:
+				dn_items = frappe.get_all("Delivery Note Item", filters={"parent": docname}, fields=["against_sales_order"])
+				so_names = list(set([i.against_sales_order for i in dn_items if i.against_sales_order]))
+				ref_doc_names = list(set([docname] + so_names))
+			elif doctype == "Sales Invoice":
+				ref_doc_names = [docname]
+
+	# Safely fetch party if party_field is defined for doctype
+	if doctype and docname and party_field and not party:
+		party = frappe.db.get_value(doctype, docname, party_field)
 
 	# Fetch items present in this document
-	doc_items = frappe.get_all(f"{doctype} Item", filters={"parent": docname}, fields=["item_code"])
-	doc_item_codes = set([di.item_code for di in doc_items if di.item_code])
+	doc_item_codes = set()
+	if doctype and docname:
+		doc_items = frappe.get_all(f"{doctype} Item", filters={"parent": docname}, fields=["item_code"])
+		doc_item_codes = set([di.item_code for di in doc_items if di.item_code])
 
-	# Supplier name
-	supplier = frappe.db.get_value(doctype, docname, "supplier")
+	filters = {"docstatus": 1}
+	if ref_doc_names and any(ref_doc_names):
+		filters["reference_document_name"] = ("in", ref_doc_names)
+	elif party:
+		filters["party"] = party
 
 	movements = frappe.get_all("Container Movements",
-		filters={
-			"reference_document_type": ("in", ["Purchase Order", "Purchase Receipt"]),
-			"reference_document_name": ("in", po_names + [docname]) if po_names else docname,
-			"purpose": "Send to Supplier",
-			"docstatus": 1
-		},
-		fields=["name", "transaction_date"]
+		filters=filters,
+		fields=["name", "transaction_date"],
+		order_by="transaction_date desc",
+		limit_page_length=50
 	)
 
 	dispatched = []
@@ -814,7 +972,7 @@ def get_dispatched_containers(doctype, docname):
 
 			c_info = frappe.db.get_value("Containers", item.container,
 				["status", "current_item", "test_due", "return_to_owner", "custodian", "current_location"], as_dict=True) or {}
-			
+
 			res = frappe.db.sql("""
 				SELECT cre.name, cre.reserved_until_date
 				FROM `tabContainer Reservation Entry` cre
@@ -841,48 +999,40 @@ def get_dispatched_containers(doctype, docname):
 			})
 			seen_containers.add(item.container)
 
-	# Include any containers currently With Supplier / Reserved for this supplier & matching doc_item_codes
-	if supplier:
-		supp_filters = {
-			"status": ["in", ["With Supplier", "Reserved"]],
-			"custodian": supplier,
-			"docstatus": ("<", 2)
-		}
-		supplier_containers = frappe.get_all("Containers",
-			filters=supp_filters,
-			fields=["name", "type", "current_item", "status", "dispatch_date", "current_location", "test_due", "return_to_owner", "custodian"]
-		)
+	# Include containers actively reserved specifically for this document
+	if docname:
+		res_containers = frappe.db.sql("""
+			SELECT cri.container, cri.item_code, cre.reserved_until_date, cre.party
+			FROM `tabContainer Reservation Entry` cre
+			JOIN `tabContainer Reservation Item` cri ON cri.parent = cre.name
+			WHERE cre.reference_document_name = %s
+			  AND cre.docstatus = 1
+			  AND cre.status = 'Active'
+		""", (docname,), as_dict=True)
 
-		for c in supplier_containers:
-			if c.name in seen_containers:
+		for rc in res_containers:
+			if rc.container in seen_containers:
 				continue
-			if doc_item_codes and c.current_item and c.current_item not in doc_item_codes:
+			if doc_item_codes and rc.item_code and rc.item_code not in doc_item_codes:
 				continue
 
-			res = frappe.db.sql("""
-				SELECT cre.name, cre.reserved_until_date
-				FROM `tabContainer Reservation Entry` cre
-				JOIN `tabContainer Reservation Item` cri ON cri.parent = cre.name
-				WHERE cri.container = %s AND cre.docstatus = 1 AND cre.status = 'Active'
-				LIMIT 1
-			""", (c.name,), as_dict=True)
-
-			is_res = bool(res) or (c.status == "Reserved")
-			res_until = str(res[0].reserved_until_date) if res and res[0].reserved_until_date else (str(c.return_to_owner) if c.return_to_owner else None)
+			c_info = frappe.db.get_value("Containers", rc.container,
+				["status", "type", "current_item", "test_due", "dispatch_date", "custodian", "current_location"], as_dict=True) or {}
 
 			dispatched.append({
 				"movement": "-",
-				"date": str(c.dispatch_date) if c.dispatch_date else "-",
-				"container": c.name,
-				"container_type": c.type,
-				"item_code": c.current_item,
-				"status": c.status,
-				"test_due": str(c.test_due) if c.test_due else None,
-				"is_reserved": is_res,
-				"return_to_owner": res_until,
-				"custodian": c.custodian,
-				"current_location": c.current_location
+				"date": str(c_info.get("dispatch_date")) if c_info.get("dispatch_date") else "-",
+				"container": rc.container,
+				"container_type": c_info.get("type"),
+				"item_code": rc.item_code or c_info.get("current_item"),
+				"status": c_info.get("status") or "Reserved",
+				"test_due": str(c_info.get("test_due")) if c_info.get("test_due") else None,
+				"is_reserved": True,
+				"return_to_owner": str(rc.reserved_until_date) if rc.reserved_until_date else None,
+				"custodian": rc.party or c_info.get("custodian"),
+				"current_location": c_info.get("current_location")
 			})
+			seen_containers.add(rc.container)
 
 	receipts = []
 	if doctype == "Purchase Order":
@@ -891,8 +1041,7 @@ def get_dispatched_containers(doctype, docname):
 			fields=["parent"]
 		)
 		if pr_items:
-			unique_prs = list(set([pri.parent for pri in pr_items if pri.parent]))
-			receipts = unique_prs
+			receipts = list(set([pri.parent for pri in pr_items if pri.parent]))
 	elif doctype == "Purchase Receipt":
 		receipts = [docname]
 

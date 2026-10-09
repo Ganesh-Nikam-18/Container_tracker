@@ -222,13 +222,14 @@ class ContainerMovements(Document):
 			else:
 				container_doc.db_set('status', "Filled")
 
-			container_doc.db_set('custodian', "Company")
-			container_doc.db_set('custodian_type', "Company")
+			container_doc.db_set('custodian', None)
+			container_doc.db_set('custodian_type', None)
 
 			# Clear holding dates if the movement being cancelled was outbound
 			if self.purpose in OUTBOUND_PURPOSES:
 				container_doc.db_set('holder_since', None)
 				container_doc.db_set('dispatch_date', None)
+				container_doc.db_set('return_to_owner', None)
 
 	def determine_new_state(self, container):
 		status = "Available"
@@ -260,25 +261,10 @@ class ContainerMovements(Document):
 
 	def make_ledger_entries(self, is_cancelled=0):
 		"""Create an immutable Container Ledger Entry for every container row."""
-		entry_type = "Outward" if self.purpose in OUTBOUND_PURPOSES else "Inward"
-
 		for item in self.get("containers"):
-			# Get status before the movement (read from last CLE or from current container state)
-			if is_cancelled:
-				# For cancellation, mark the existing entry as cancelled and post a reversal
-				existing = frappe.get_all(
-					"Container Ledger Entry",
-					filters={"containers_movement": self.name, "is_cancelled": 0},
-					fields=["name"]
-				)
-				for e in existing:
-					frappe.db.set_value("Container Ledger Entry", e.name, "is_cancelled", 1)
-				# Post a reversal entry
-				self._insert_ledger_entry(item, entry_type, is_cancelled=1)
-			else:
-				self._insert_ledger_entry(item, entry_type, is_cancelled=0)
+			self._insert_ledger_entry(item, is_cancelled=is_cancelled)
 
-	def _insert_ledger_entry(self, item, entry_type, is_cancelled=0):
+	def _insert_ledger_entry(self, item, is_cancelled=0):
 		container_data = frappe.db.get_value(
 			"Containers", item.container,
 			["status", "fill_status", "current_item", "custodian"],
@@ -295,11 +281,24 @@ class ContainerMovements(Document):
 		supplier_name = self.party if party_type == "Supplier" else None
 		customer_name = self.party if party_type == "Customer" else None
 
+		# Determine directional entry type and source/target locations
+		is_outbound = self.purpose in OUTBOUND_PURPOSES
+
+		if is_cancelled:
+			# Reversal entry: direction is flipped and locations are reversed back to plant
+			entry_type = "Inward" if is_outbound else "Outward"
+			source_location = self.party or "External"
+			target_location = "Plant Main Store"
+		else:
+			entry_type = "Outward" if is_outbound else "Inward"
+			source_location = frappe.db.get_value("Containers", item.container, "current_location") or "Plant Main Store"
+			target_location = self.party or "Plant Main Store"
+
 		cle = frappe.get_doc({
 			"doctype": "Container Ledger Entry",
 			"datetime": now_datetime(),
 			"container": item.container,
-			"entry_type": "Outward" if self.purpose in OUTBOUND_PURPOSES else "Inward",
+			"entry_type": entry_type,
 			"containers_movement": self.name,
 			"item_code": item.item_code or container_data.get("current_item"),
 			"filled_qty": item.qty if item.qty else 0,
@@ -307,8 +306,8 @@ class ContainerMovements(Document):
 			"party": self.party,
 			"supplier": supplier_name,
 			"customer": customer_name,
-			"source_location": frappe.db.get_value("Containers", item.container, "current_location") or "Plant Main Store",
-			"target_location": self.party or "Plant Main Store",
+			"source_location": source_location,
+			"target_location": target_location,
 			"reference_document_type": self.reference_document_type or "Container Movements",
 			"reference_document_name": self.reference_document_name or self.name,
 			"is_cancelled": is_cancelled,

@@ -15,17 +15,15 @@
   "uom",
   "filled_qty",
   "movement_party_section",
-  "containers_movement",
   "party_type",
   "party",
   "column_break_2",
   "source_location",
   "target_location",
   "reference_section",
+  "containers_movement",
   "reference_document_type",
   "reference_document_name",
-  "delivery_note",
-  "dn_date",
   "column_break_3",
   "status_before",
   "is_cancelled"
@@ -39,9 +37,7 @@
   {
    "fieldname": "datetime",
    "fieldtype": "Datetime",
-   "in_filter": 1,
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Posting Datetime",
    "read_only": 1
   },
@@ -99,9 +95,7 @@
   {
    "fieldname": "filled_qty",
    "fieldtype": "Float",
-   "in_filter": 1,
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Filled Qty",
    "non_negative": 1,
    "read_only": 1
@@ -179,29 +173,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "delivery_note",
-   "fieldtype": "Link",
-   "in_filter": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Delivery Note",
-   "options": "Delivery Note",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "delivery_note.posting_date",
-   "fieldname": "dn_date",
-   "fieldtype": "Date",
-   "label": "DN Date",
-   "no_copy": 1,
-   "read_only": 1
-  },
-  {
    "fieldname": "column_break_3",
    "fieldtype": "Column Break"
   },
   {
-   "description": "Container status before this movement was applied.",
    "fieldname": "status_before",
    "fieldtype": "Data",
    "label": "Status Before",
@@ -221,7 +196,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-05 14:51:04.035666",
+ "modified": "2026-10-09 18:00:50.340340",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Ledger Entry",
@@ -237,6 +212,18 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Asset Manager",
    "share": 1,
    "write": 1
   }

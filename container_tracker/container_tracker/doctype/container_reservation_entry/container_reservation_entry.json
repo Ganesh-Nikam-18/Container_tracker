@@ -12,19 +12,20 @@
   "posting_date",
   "column_break_nnxy",
   "status",
-  "section_party_ref",
-  "party_type",
-  "party",
-  "column_break_mdqo",
-  "reference_document_type",
-  "reference_document_name",
+  "is_return",
   "reservation_period_section",
   "from_date",
   "column_break_qcie",
   "reserved_until_date",
   "reserved_containers_section",
   "reserved_containers",
-  "amended_from"
+  "amended_from",
+  "section_party_ref",
+  "party_type",
+  "party",
+  "column_break_mdqo",
+  "reference_document_type",
+  "reference_document_name"
  ],
  "fields": [
   {
@@ -74,6 +75,7 @@
    "read_only": 1
   },
   {
+   "collapsible": 1,
    "fieldname": "section_party_ref",
    "fieldtype": "Section Break",
    "label": "Party & Reference"
@@ -154,13 +156,20 @@
    "label": "Reserved Containers",
    "options": "Container Reservation Item",
    "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_return",
+   "fieldtype": "Check",
+   "label": "Is Return",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-05 17:12:07.439167",
+ "modified": "2026-10-08 11:23:47.662959",
  "modified_by": "Administrator",
  "module": "Container Tracker",
  "name": "Container Reservation Entry",

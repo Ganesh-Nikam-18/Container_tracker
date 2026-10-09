@@ -8,6 +8,26 @@ frappe.ui.form.on("Containers", {
 		}
 
 		if (frm.doc.docstatus < 2) {
+			if (frm.doc.status === 'Reserved') {
+				frm.add_custom_button(__('Return from Reservation'), () => {
+					frappe.confirm(
+						__('Are you sure you want to return container <b>{0}</b> from reservation?', [frm.doc.name]),
+						() => {
+							frappe.call({
+								method: 'container_tracker.container_tracker.doctype.container_reservation_entry.container_reservation_entry.return_container_reservation',
+								args: { containers: [frm.doc.name] },
+								callback: function (r) {
+									if (r.message && r.message.message) {
+										frappe.show_alert({ message: r.message.message, indicator: 'green' });
+										frm.reload_doc();
+									}
+								}
+							});
+						}
+					);
+				}, __('Actions'));
+			}
+
 			frm.add_custom_button(__('Mark Damage'), () => {
 				window.open_mark_damage_dialog(frm.doc.name, () => {
 					frm.reload_doc();
