@@ -14,7 +14,7 @@ app_license = "mit"
 add_to_apps_screen = [
 	{
 		"name": "container_tracker",
-		"logo": "/assets/container_tracker/shipping-timed.png",
+		"logo": "/assets/container_tracker/shipping-timed.png", 
 		"title": "Container Tracker",
 		"route": "/app/container-tracker",
 		# "has_permission": "container_tracker.api.permission.has_app_permission"
@@ -117,7 +117,8 @@ add_to_apps_screen = [
 # after_build = "container_tracker.build.after_build"
 
 # Desk Notifications
-# ------------------
+# -----------------
+
 # See frappe.core.notifications.get_notification_config
 
 # notification_config = "container_tracker.notifications.get_notification_config"
@@ -140,8 +141,8 @@ add_to_apps_screen = [
 
 doc_events = {
 	"Asset": {
-		"on_submit": "container_tracker.overrides.asset.create_container_on_submit"
-	},
+		"on_submit": "container_tracker.overrides.asset.create_container_on_submit",
+    },
 	"Purchase Order": {
 		"on_cancel": "container_tracker.overrides.purchase_order.cancel_linked_container_movements"
 	},
@@ -187,9 +188,9 @@ doc_events = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "container_tracker.event.get_events"
-# }
+override_whitelisted_methods = {
+	"erpnext.assets.doctype.asset.asset.validate_category": "container_tracker.overrides.asset.custom_validate_category"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
